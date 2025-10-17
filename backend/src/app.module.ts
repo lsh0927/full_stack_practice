@@ -3,13 +3,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // ConfigService를 사용해서 환경 변수를 안전하게 가져옵니다
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
@@ -20,6 +20,7 @@ import { AppService } from './app.service';
         return { uri };
       },
     }),
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
