@@ -9,19 +9,51 @@ import { UpdatePostDto } from './dto/update-post.dto';
 export class PostsService {
   constructor(
     @InjectModel(Post.name) private postModel: Model<Post>,
-  ) {}
+  ) { }
 
   async create(createPostDto: CreatePostDto): Promise<Post> {
     const newPost = new this.postModel(createPostDto);
     return newPost.save();
   }
 
-  async findAll(): Promise<Post[]> {
-    return this.postModel
-      .find()
+  // async findAll(): Promise<Post[]> {
+  //   return this.postModel
+  //     .find()
+  //     .sort({ createdAt: -1 })
+  //     .exec();
+  // }
+
+  // findAll 메서드를 페이지네이션과 검색을 지원하도록 수정
+  // 이것이 페이지네이션을 지원하는 새로운 버전입니다
+  async findAll(page: number = 1, limit: number = 10, search?: string) {
+    const skip = (page - 1) * limit;
+
+    const searchFilter = search
+      ? {
+        $or: [
+          { title: { $regex: search, $options: 'i' } },
+          { content: { $regex: search, $options: 'i' } },
+        ],
+      }
+      : {};
+
+    const posts = await this.postModel
+      .find(searchFilter)
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .exec();
+
+    const total = await this.postModel.countDocuments(searchFilter).exec();
+
+    return {
+      posts,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
+
 
   async findOne(id: string): Promise<Post> {
     const post = await this.postModel
