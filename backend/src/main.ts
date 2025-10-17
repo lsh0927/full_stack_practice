@@ -9,6 +9,14 @@ app.service.ts = @Service. 비즈니스 로직*/
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  app.useGlobalPipes(new ValidationPipe());
+  
+  // CORS 설정 - 프론트엔드에서 백엔드 API를 호출할 수 있도록 허용
+  app.enableCors({
+    origin: 'http://localhost:3001', // 프론트엔드 주소
+    credentials: true,
+  });
+  
+  await app.listen(3000);
 }
 bootstrap();
