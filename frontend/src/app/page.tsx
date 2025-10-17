@@ -1,103 +1,105 @@
-import Image from "next/image";
+import Link from 'next/link';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="max-w-5xl mx-auto px-4 py-16">
+        {/* 메인 헤더 영역 */}
+        <div className="text-center mb-16">
+          <h1 className="text-6xl font-bold text-gray-900 mb-4">
+            게시판 프로젝트
+          </h1>
+          <p className="text-xl text-gray-700 mb-2">
+            React, Next.js, NestJS, MongoDB를 활용한 풀스택 애플리케이션
+          </p>
+          <p className="text-lg text-gray-600">
+            게시글을 자유롭게 작성하고 관리할 수 있는 플랫폼입니다
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* 주요 기능 카드 영역 */}
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          {/* 기능 1: 게시글 작성 */}
+          <div className="bg-white rounded-xl shadow-lg p-6 transform transition-transform hover:scale-105">
+            <div className="text-4xl mb-4">✍️</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              게시글 작성
+            </h3>
+            <p className="text-gray-600">
+              누구나 쉽게 게시글을 작성하고 자신의 생각을 공유할 수 있습니다
+            </p>
+          </div>
+
+          {/* 기능 2: 실시간 조회 */}
+          <div className="bg-white rounded-xl shadow-lg p-6 transform transition-transform hover:scale-105">
+            <div className="text-4xl mb-4">👀</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              실시간 조회
+            </h3>
+            <p className="text-gray-600">
+              모든 게시글을 실시간으로 확인하고 조회수가 자동으로 집계됩니다
+            </p>
+          </div>
+
+          {/* 기능 3: 수정 및 삭제 */}
+          <div className="bg-white rounded-xl shadow-lg p-6 transform transition-transform hover:scale-105">
+            <div className="text-4xl mb-4">🔧</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              수정 및 삭제
+            </h3>
+            <p className="text-gray-600">
+              작성한 게시글을 언제든지 수정하거나 삭제할 수 있습니다
+            </p>
+          </div>
+        </div>
+
+        {/* 기술 스택 소개 영역 */}
+        <div className="bg-white rounded-xl shadow-xl p-8 mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+            사용된 기술 스택
+          </h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* 프론트엔드 */}
+            <div>
+              <h3 className="text-xl font-semibold text-blue-600 mb-3">
+                Frontend
+              </h3>
+              <div className="space-y-2 text-gray-700">
+                <p>• React 19 - 사용자 인터페이스 구축</p>
+                <p>• Next.js 15 - 서버 사이드 렌더링 프레임워크</p>
+                <p>• TypeScript - 타입 안정성 보장</p>
+                <p>• Tailwind CSS - 반응형 디자인</p>
+              </div>
+            </div>
+
+            {/* 백엔드 */}
+            <div>
+              <h3 className="text-xl font-semibold text-green-600 mb-3">
+                Backend
+              </h3>
+              <div className="space-y-2 text-gray-700">
+                <p>• NestJS - 확장 가능한 서버 프레임워크</p>
+                <p>• MongoDB - NoSQL 데이터베이스</p>
+                <p>• Mongoose - MongoDB ODM</p>
+                <p>• Docker - 컨테이너 기반 개발 환경</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 메인 액션 버튼 */}
+        <div className="text-center">
+          <Link
+            href="/posts"
+            className="inline-block bg-blue-600 text-white text-xl font-semibold px-12 py-4 rounded-lg shadow-lg hover:bg-blue-700 transform transition-all hover:scale-105"
+          >
+            게시판 바로가기 →
+          </Link>
+          <p className="mt-4 text-gray-600">
+            지금 바로 게시글을 확인하고 작성해보세요
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
