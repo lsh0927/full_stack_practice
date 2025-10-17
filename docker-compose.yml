@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: board-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: board
+    command: ["--bind_ip_all"]  # 이 줄을 추가!
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - board-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: board-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass redis123
+    volumes:
+      - redis_data:/data
+    networks:
+      - board-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  board-network:
+    driver: bridge
