@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Post } from '@/types/post';
 import { useAuth } from '@/contexts/AuthContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 interface PostsResponse {
   posts: Post[];
