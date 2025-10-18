@@ -1,22 +1,28 @@
 version: '3.8'
 
 services:
-  mongodb:
-    image: mongo:7.0
-    container_name: board-mongodb
+  # PostgreSQL - 메인 데이터베이스 (Users, Posts)
+  postgres:
+    image: postgres:16-alpine
+    container_name: board-postgres
     restart: always
     ports:
-      - "27017:27017"
+      - "5432:5432"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin123
-      MONGO_INITDB_DATABASE: board
-    command: ["--bind_ip_all"]  # 이 줄을 추가!
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: board
     volumes:
-      - mongodb_data:/data/db
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - board-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d board"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # Redis - 캐싱 및 세션 관리
   redis:
     image: redis:7-alpine
     container_name: board-redis
@@ -28,10 +34,35 @@ services:
       - redis_data:/data
     networks:
       - board-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB - 마이그레이션 후 제거 예정 (현재는 유지)
+  mongodb:
+    image: mongo:7.0
+    container_name: board-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: board
+    command: ["--bind_ip_all"]
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - board-network
+    profiles:
+      - migration  # docker-compose --profile migration up 으로만 실행
 
 volumes:
-  mongodb_data:
+  postgres_data:
   redis_data:
+  mongodb_data:
 
 networks:
   board-network:
