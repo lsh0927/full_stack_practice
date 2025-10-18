@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types/post';
@@ -21,8 +21,9 @@ function formatDate(dateString: string): string {
 export default function PostDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const router = useRouter();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +33,7 @@ export default function PostDetailPage({
   useEffect(() => {
     async function fetchPost() {
       try {
-        const response = await fetch(`${API_URL}/posts/${params.id}`, {
+        const response = await fetch(`${API_URL}/posts/${id}`, {
           cache: 'no-store',
         });
 
@@ -52,7 +53,7 @@ export default function PostDetailPage({
 
         if (!viewCountedRef.current) {
           viewCountedRef.current = true;
-          fetch(`${API_URL}/posts/${params.id}/views`, {
+          fetch(`${API_URL}/posts/${id}/views`, {
             method: 'POST',
           }).catch(() => {});
         }
@@ -63,7 +64,7 @@ export default function PostDetailPage({
     }
 
     fetchPost();
-  }, [params.id]);
+  }, [id]);
 
   const handleDelete = async () => {
     if (!confirm('정말 삭제하시겠습니까?')) {
@@ -71,7 +72,7 @@ export default function PostDetailPage({
     }
 
     try {
-      const response = await fetch(`${API_URL}/posts/${params.id}`, {
+      const response = await fetch(`${API_URL}/posts/${id}`, {
         method: 'DELETE',
       });
 

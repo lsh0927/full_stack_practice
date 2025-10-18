@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Post } from '@/types/post';
@@ -10,8 +10,9 @@ const API_URL = 'http://localhost:3000';
 export default function EditPostPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const router = useRouter();
   const [formData, setFormData] = useState({
     title: '',
@@ -25,7 +26,7 @@ export default function EditPostPage({
   useEffect(() => {
     async function fetchPost() {
       try {
-        const response = await fetch(`${API_URL}/posts/${params.id}`, {
+        const response = await fetch(`${API_URL}/posts/${id}`, {
           cache: 'no-store',
         });
 
@@ -47,7 +48,7 @@ export default function EditPostPage({
     }
 
     fetchPost();
-  }, [params.id]);
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +62,7 @@ export default function EditPostPage({
     }
 
     try {
-      const response = await fetch(`${API_URL}/posts/${params.id}`, {
+      const response = await fetch(`${API_URL}/posts/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +74,7 @@ export default function EditPostPage({
         throw new Error('게시글 수정에 실패했습니다');
       }
 
-      router.push(`/posts/${params.id}`);
+      router.push(`/posts/${id}`);
     } catch (err) {
       setError('게시글 수정 중 오류가 발생했습니다');
       setSubmitting(false);
@@ -118,7 +119,7 @@ export default function EditPostPage({
             Board
           </Link>
           <Link
-            href={`/posts/${params.id}`}
+            href={`/posts/${id}`}
             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-full font-semibold hover:bg-gray-50 transition-all"
           >
             취소
@@ -192,7 +193,7 @@ export default function EditPostPage({
 
           <div className="flex gap-3 pt-4">
             <Link
-              href={`/posts/${params.id}`}
+              href={`/posts/${id}`}
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors text-center"
             >
               취소
