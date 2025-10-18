@@ -130,7 +130,7 @@ export default function NewPostPage() {
                 setFormData({ ...formData, title: e.target.value })
               }
               placeholder="제목을 입력하세요"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
               required
             />
           </div>
@@ -147,7 +147,7 @@ export default function NewPostPage() {
               }
               placeholder="내용을 입력하세요"
               rows={12}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all text-gray-900"
               required
             />
           </div>
