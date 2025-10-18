@@ -1,35 +1,35 @@
 version: '3.8'
 
 services:
-  # PostgreSQL - 메인 데이터베이스 (Users, Posts)
+  # PostgreSQL 16 - 사용자 관리, 게시글, 댓글
   postgres:
     image: postgres:16-alpine
     container_name: board-postgres
-    restart: always
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: board
+      POSTGRES_USER: board_user
+      POSTGRES_PASSWORD: board_password
+      POSTGRES_DB: board_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - board-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d board"]
+      test: ["CMD-SHELL", "pg_isready -U board_user -d board_db"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis - 캐싱 및 세션 관리
+  # Redis 7 - 세션, 캐시, 토큰 저장소
   redis:
     image: redis:7-alpine
     container_name: board-redis
-    restart: always
+    restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --requirepass redis123
+    command: redis-server --appendonly yes --requirepass redis_password
     volumes:
       - redis_data:/data
     networks:
@@ -40,29 +40,71 @@ services:
       timeout: 5s
       retries: 5
 
-  # MongoDB - 마이그레이션 후 제거 예정 (현재는 유지)
+  # MongoDB 7 - 채팅 메시지 저장소
   mongodb:
-    image: mongo:7.0
+    image: mongo:7-jammy
     container_name: board-mongodb
-    restart: always
+    restart: unless-stopped
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin123
-      MONGO_INITDB_DATABASE: board
-    command: ["--bind_ip_all"]
+      MONGO_INITDB_ROOT_USERNAME: mongo_user
+      MONGO_INITDB_ROOT_PASSWORD: mongo_password
+      MONGO_INITDB_DATABASE: board_chat
     volumes:
       - mongodb_data:/data/db
     networks:
       - board-network
-    profiles:
-      - migration  # docker-compose --profile migration up 으로만 실행
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ 3 - 메시지 큐 (비동기 작업 처리)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: board-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI (http://localhost:15672)
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq_user
+      RABBITMQ_DEFAULT_PASS: rabbitmq_password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - board-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nginx - 리버스 프록시 / 로드 밸런서 (Phase 5에서 사용)
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: board-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #   networks:
+  #     - board-network
+  #   depends_on:
+  #     - backend
 
 volumes:
   postgres_data:
+    driver: local
   redis_data:
+    driver: local
   mongodb_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
 
 networks:
   board-network:

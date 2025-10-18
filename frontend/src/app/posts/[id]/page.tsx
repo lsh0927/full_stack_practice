@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types/post';
+import { useAuth } from '@/contexts/AuthContext';
 
 const API_URL = 'http://localhost:3000';
 
@@ -25,6 +26,7 @@ export default function PostDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { token } = useAuth();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -71,9 +73,17 @@ export default function PostDetailPage({
       return;
     }
 
+    if (!token) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/posts/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
@@ -141,10 +151,10 @@ export default function PostDetailPage({
           <div className="p-6 border-b border-gray-100">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                {post.author[0].toUpperCase()}
+                {post.author?.username?.[0]?.toUpperCase() || '?'}
               </div>
               <div className="ml-3 flex-1">
-                <p className="font-semibold text-gray-900">{post.author}</p>
+                <p className="font-semibold text-gray-900">{post.author?.username || '알 수 없음'}</p>
                 <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -172,7 +182,7 @@ export default function PostDetailPage({
           <div className="p-6 bg-gray-50 border-t border-gray-100">
             <div className="flex gap-3 justify-end">
               <Link
-                href={`/posts/${post._id}/edit`}
+                href={`/posts/${post.id}/edit`}
                 className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors"
               >
                 수정

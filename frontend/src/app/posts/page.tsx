@@ -244,18 +244,18 @@ export default function PostsPage() {
           <div className="space-y-4">
             {posts.map((post) => (
               <Link
-                key={post._id}
-                href={`/posts/${post._id}`}
+                key={post.id}
+                href={`/posts/${post.id}`}
                 className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="p-6">
                   {/* Post Header */}
                   <div className="flex items-center mb-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-                      {post.author[0].toUpperCase()}
+                      {post.author?.username?.[0]?.toUpperCase() || '?'}
                     </div>
                     <div className="ml-3 flex-1">
-                      <p className="font-semibold text-gray-900">{post.author}</p>
+                      <p className="font-semibold text-gray-900">{post.author?.username || '알 수 없음'}</p>
                       <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
                     </div>
                   </div>

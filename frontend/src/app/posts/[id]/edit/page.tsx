@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Post } from '@/types/post';
+import { useAuth } from '@/contexts/AuthContext';
 
 const API_URL = 'http://localhost:3000';
 
@@ -14,10 +15,10 @@ export default function EditPostPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { token } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    author: '',
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -38,7 +39,6 @@ export default function EditPostPage({
         setFormData({
           title: post.title,
           content: post.content,
-          author: post.author,
         });
         setLoading(false);
       } catch (err) {
@@ -55,8 +55,14 @@ export default function EditPostPage({
     setSubmitting(true);
     setError('');
 
-    if (!formData.title || !formData.content || !formData.author) {
+    if (!formData.title || !formData.content) {
       setError('모든 필드를 입력해주세요');
+      setSubmitting(false);
+      return;
+    }
+
+    if (!token) {
+      setError('로그인이 필요합니다');
       setSubmitting(false);
       return;
     }
@@ -66,6 +72,7 @@ export default function EditPostPage({
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -139,23 +146,6 @@ export default function EditPostPage({
               {error}
             </div>
           )}
-
-          <div>
-            <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-2">
-              작성자
-            </label>
-            <input
-              id="author"
-              type="text"
-              value={formData.author}
-              onChange={(e) =>
-                setFormData({ ...formData, author: e.target.value })
-              }
-              placeholder="이름을 입력하세요"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-              required
-            />
-          </div>
 
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">

@@ -53,11 +53,13 @@
 - **TypeScript** `5` - Type-safe JavaScript
 - **Tailwind CSS** `4` - Utility-first CSS Framework
 
-### Infrastructure
+### Infrastructure (Docker Compose)
 - **Docker** - 컨테이너화
 - **Docker Compose** - 멀티 컨테이너 오케스트레이션
-- **PostgreSQL 16 Alpine** - 데이터베이스 컨테이너
-- **Redis** `7` - 캐싱 (설정됨, 향후 확장 가능)
+- **PostgreSQL 16 Alpine** - 관계형 데이터베이스 (사용자, 게시글, 댓글)
+- **Redis 7 Alpine** - 캐시 및 세션 스토어
+- **MongoDB 7 Jammy** - NoSQL 데이터베이스 (채팅 메시지)
+- **RabbitMQ 3 Management** - 메시지 큐 (비동기 작업 처리)
 
 ### Development Tools
 - **ESLint** - 코드 품질 관리
@@ -133,24 +135,41 @@
 │  │  └─────────────────────────────────────────────┘   │   │
 │  └─────────────────────────────────────────────────────┘   │
 └───────────────────────┬─────────────────────────────────────┘
-                        │ TypeORM
+                        │ TypeORM / Mongoose / Redis Client
                         ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              Docker Compose Services                         │
+│              Docker Compose Infrastructure                   │
+│              Network: board-network                          │
+│                                                              │
 │  ┌───────────────────────┐  ┌──────────────────────────┐   │
-│  │  PostgreSQL 16         │  │  Redis                   │   │
+│  │  PostgreSQL 16         │  │  Redis 7                 │   │
 │  │  Port: 5432            │  │  Port: 6379              │   │
-│  │  - users 테이블        │  │  - Cache (Future Use)    │   │
-│  │  - posts 테이블        │  │  - Session (Future Use)  │   │
+│  │  User: board_user      │  │  Password: redis_password│   │
+│  │  DB: board_db          │  │                          │   │
+│  │  - users 테이블        │  │  - Session Storage       │   │
+│  │  - posts 테이블        │  │  - Token Blacklist       │   │
+│  │  - comments 테이블     │  │  - Cache Layer           │   │
 │  │  - FK: authorId → id   │  │  - Volume: redis_data    │   │
 │  │  - Volume: postgres_data│  │                          │   │
 │  └───────────────────────┘  └──────────────────────────┘   │
-│  ┌───────────────────────┐                                  │
-│  │  MongoDB (migration)   │  ⚠️ --profile migration 시에만  │
-│  │  Port: 27017           │     실행 (데이터 마이그레이션용) │
-│  └───────────────────────┘                                  │
 │                                                              │
-│              Network: board-network                          │
+│  ┌───────────────────────┐  ┌──────────────────────────┐   │
+│  │  MongoDB 7             │  │  RabbitMQ 3              │   │
+│  │  Port: 27017           │  │  AMQP: 5672              │   │
+│  │  User: mongo_user      │  │  Management: 15672       │   │
+│  │  DB: board_chat        │  │  User: rabbitmq_user     │   │
+│  │                        │  │                          │   │
+│  │  - Chat Messages       │  │  - Email Queue           │   │
+│  │  - Real-time Data      │  │  - Notification Queue    │   │
+│  │  - Volume: mongodb_data│  │  - Image Processing Queue│   │
+│  │                        │  │  - Volume: rabbitmq_data │   │
+│  └───────────────────────┘  └──────────────────────────┘   │
+│                                                              │
+│  ┌───────────────────────────────────────────────────┐     │
+│  │  Nginx (Phase 5 - 주석 처리됨)                     │     │
+│  │  Port: 80                                          │     │
+│  │  - Reverse Proxy & Load Balancer                  │     │
+│  └───────────────────────────────────────────────────┘     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -269,6 +288,17 @@ CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
 - **Docker** >= 20.10.0
 - **Docker Compose** >= 2.0.0
 
+### 🐳 Docker Compose 인프라 구성
+
+이 프로젝트는 다음 인프라 서비스들을 Docker Compose로 관리합니다:
+
+| 서비스 | 용도 | 포트 | 비밀번호 |
+|--------|------|------|----------|
+| **PostgreSQL 16** | 사용자, 게시글, 댓글 | 5432 | `board_password` |
+| **Redis 7** | 세션, 캐시, 토큰 저장소 | 6379 | `redis_password` |
+| **MongoDB 7** | 채팅 메시지 | 27017 | `mongo_password` |
+| **RabbitMQ 3** | 메시지 큐 (비동기 작업) | 5672, 15672 | `rabbitmq_password` |
+
 ### 설치 및 실행
 
 #### 1. 저장소 클론
@@ -278,40 +308,95 @@ git clone https://github.com/lsh0927/full_stack_practice.git
 cd full_stack_practice
 ```
 
-#### 2. Docker 서비스 시작
+#### 2. 환경 변수 설정
 
-PostgreSQL을 Docker Compose로 실행합니다.
+프로젝트 루트에 `.env` 파일을 생성합니다:
 
 ```bash
-docker-compose up -d postgres
+# .env.example 파일을 복사하여 .env 파일 생성
+cp .env.example .env
+
+# 필요한 경우 .env 파일을 편집하여 값을 수정
+# JWT_SECRET, SESSION_SECRET 등은 반드시 변경하세요!
 ```
 
-서비스 확인:
+#### 3. Docker Compose로 모든 인프라 서비스 시작
+
+**방법 1: 편리한 스크립트 사용 (권장)**
+
 ```bash
+# 모든 인프라 서비스 시작 (PostgreSQL, Redis, MongoDB, RabbitMQ)
+./scripts/docker-start.sh
+```
+
+**방법 2: Docker Compose 명령어 직접 사용**
+
+```bash
+# 모든 서비스 시작
+docker-compose up -d
+
+# 특정 서비스만 시작
+docker-compose up -d postgres redis
+```
+
+#### 4. 서비스 상태 확인
+
+```bash
+# 실행 중인 서비스 확인
 docker-compose ps
+
+# 서비스 로그 확인
+./scripts/docker-logs.sh
+
+# 특정 서비스 로그만 확인
+./scripts/docker-logs.sh postgres
 ```
 
 예상 출력:
 ```
-NAME                IMAGE                  STATUS                   PORTS
-board-postgres      postgres:16-alpine     Up 2 minutes (healthy)   0.0.0.0:5432->5432/tcp
+NAME                IMAGE                            STATUS                   PORTS
+board-postgres      postgres:16-alpine              Up 2 minutes (healthy)   0.0.0.0:5432->5432/tcp
+board-redis         redis:7-alpine                  Up 2 minutes (healthy)   0.0.0.0:6379->6379/tcp
+board-mongodb       mongo:7-jammy                   Up 2 minutes (healthy)   0.0.0.0:27017->27017/tcp
+board-rabbitmq      rabbitmq:3-management-alpine    Up 2 minutes (healthy)   0.0.0.0:5672->5672/tcp, 0.0.0.0:15672->15672/tcp
 ```
 
-#### 3. 백엔드 환경 변수 설정
+#### 5. RabbitMQ 관리 UI 접속 (선택사항)
+
+브라우저에서 http://localhost:15672 접속
+- 사용자명: `rabbitmq_user`
+- 비밀번호: `rabbitmq_password`
+
+#### 6. 백엔드 환경 변수 설정
 
 ```bash
 cd backend
 
-# .env 파일 생성 (.env.example 참고)
+# .env 파일 생성 (프로젝트 루트의 .env.example 참고)
 cat > .env <<EOF
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_USER=admin
-DATABASE_PASSWORD=admin123
-DATABASE_NAME=board
+# PostgreSQL Configuration
+DATABASE_URL=postgresql://board_user:board_password@localhost:5432/board_db
 
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=redis_password
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://mongo_user:mongo_password@localhost:27017/board_chat?authSource=admin
+
+# RabbitMQ Configuration
+RABBITMQ_URL=amqp://rabbitmq_user:rabbitmq_password@localhost:5672
+
+# JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-JWT_EXPIRATION=7d
+JWT_EXPIRES_IN=1d
+REFRESH_TOKEN_SECRET=your-super-secret-refresh-token-key-change-this
+REFRESH_TOKEN_EXPIRES_IN=7d
+
+# API Configuration
+BACKEND_PORT=4000
+CORS_ORIGIN=http://localhost:3000
 EOF
 ```
 
@@ -366,17 +451,68 @@ npm run dev
 3. 자동으로 로그인되고 JWT 토큰이 발급됩니다
 4. "작성" 버튼으로 게시글을 작성할 수 있습니다
 
-### 종료하기
+### 🐳 Docker 서비스 관리
+
+#### 서비스 시작
+```bash
+# 모든 서비스 시작
+./scripts/docker-start.sh
+
+# 또는 Docker Compose 직접 사용
+docker-compose up -d
+```
+
+#### 서비스 중지
+```bash
+# 모든 서비스 중지 (데이터는 보존됨)
+./scripts/docker-stop.sh
+
+# 또는
+docker-compose down
+```
+
+#### 서비스 재시작
+```bash
+# 모든 서비스 재시작
+./scripts/docker-restart.sh
+
+# 특정 서비스만 재시작
+docker-compose restart postgres
+```
+
+#### 로그 확인
+```bash
+# 모든 서비스 로그 실시간 확인
+./scripts/docker-logs.sh
+
+# 특정 서비스 로그만 확인
+./scripts/docker-logs.sh postgres
+./scripts/docker-logs.sh redis
+./scripts/docker-logs.sh mongodb
+./scripts/docker-logs.sh rabbitmq
+```
+
+#### 서비스 상태 확인
+```bash
+docker-compose ps
+```
+
+#### 완전 초기화 (주의!)
+```bash
+# ⚠️ 모든 컨테이너, 볼륨, 데이터 삭제
+./scripts/docker-clean.sh
+
+# 또는
+docker-compose down -v --remove-orphans
+```
+
+### 애플리케이션 종료
 
 ```bash
-# 백엔드 종료 (Ctrl + C)
-# 프론트엔드 종료 (Ctrl + C)
-
-# Docker 서비스 종료
-docker-compose down
-
-# 볼륨까지 삭제하려면 (데이터베이스 데이터 삭제됨)
-docker-compose down -v
+# 1. 백엔드 종료 (Ctrl + C)
+# 2. 프론트엔드 종료 (Ctrl + C)
+# 3. Docker 서비스 중지
+./scripts/docker-stop.sh
 ```
 
 ---
@@ -570,6 +706,13 @@ Authorization: Bearer <access_token>
 
 ```
 board-project/
+├── scripts/                      # Docker 관리 스크립트
+│   ├── docker-start.sh           # 모든 서비스 시작
+│   ├── docker-stop.sh            # 모든 서비스 중지
+│   ├── docker-restart.sh         # 모든 서비스 재시작
+│   ├── docker-logs.sh            # 서비스 로그 확인
+│   └── docker-clean.sh           # 완전 초기화
+│
 ├── backend/                      # NestJS 백엔드
 │   ├── src/
 │   │   ├── auth/                 # 인증 모듈
@@ -633,7 +776,14 @@ board-project/
 │   │       └── post.ts
 │   └── package.json
 │
-├── docker-compose.yml            # PostgreSQL, Redis, MongoDB
+├── docker-compose.yml            # 인프라 서비스 정의
+│   # PostgreSQL 16 (사용자, 게시글, 댓글)
+│   # Redis 7 (세션, 캐시, 토큰)
+│   # MongoDB 7 (채팅 메시지)
+│   # RabbitMQ 3 (메시지 큐)
+│   # Nginx (Phase 5, 주석 처리됨)
+│
+├── .env.example                  # 환경 변수 템플릿
 ├── .gitignore
 └── README.md
 ```
@@ -642,26 +792,77 @@ board-project/
 
 ## 🔐 환경 변수
 
-### Backend (.env)
+### 프로젝트 루트 (.env.example)
+
+프로젝트 루트에 `.env` 파일을 생성하여 다음 환경 변수들을 설정합니다:
 
 ```env
-# PostgreSQL Database
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_USER=admin
-DATABASE_PASSWORD=admin123
-DATABASE_NAME=board
+# ===========================================
+# Board Project Environment Configuration
+# ===========================================
+
+# Database Configuration
+DATABASE_URL=postgresql://board_user:board_password@localhost:5432/board_db
+
+# Redis - Session, Cache, Token Storage
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=redis_password
+
+# MongoDB - Chat Messages
+MONGODB_URI=mongodb://mongo_user:mongo_password@localhost:27017/board_chat?authSource=admin
+
+# RabbitMQ - Message Queue
+RABBITMQ_URL=amqp://rabbitmq_user:rabbitmq_password@localhost:5672
+RABBITMQ_MANAGEMENT_URL=http://localhost:15672
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-JWT_EXPIRATION=7d
+JWT_EXPIRES_IN=1d
+REFRESH_TOKEN_SECRET=your-super-secret-refresh-token-key-change-this
+REFRESH_TOKEN_EXPIRES_IN=7d
+
+# API Configuration
+BACKEND_PORT=4000
+FRONTEND_PORT=3000
+API_URL=http://localhost:4000
+CORS_ORIGIN=http://localhost:3000
+
+# File Upload Configuration
+MAX_FILE_SIZE=10485760
+UPLOAD_PATH=./uploads
+
+# Node Environment
+NODE_ENV=development
+
+# Logging
+LOG_LEVEL=info
+
+# Rate Limiting
+RATE_LIMIT_TTL=60
+RATE_LIMIT_MAX=100
+
+# Session Configuration
+SESSION_SECRET=your-session-secret-key-change-this
+SESSION_MAX_AGE=86400000
 ```
+
+### Docker Compose 인프라 자격 증명
+
+Docker Compose로 실행되는 서비스들의 기본 자격 증명:
+
+| 서비스 | 사용자명 | 비밀번호 | 데이터베이스/설명 |
+|--------|---------|---------|------------------|
+| PostgreSQL | `board_user` | `board_password` | `board_db` |
+| Redis | - | `redis_password` | - |
+| MongoDB | `mongo_user` | `mongo_password` | `board_chat` |
+| RabbitMQ | `rabbitmq_user` | `rabbitmq_password` | Management UI: http://localhost:15672 |
 
 ### Frontend (.env.local)
 
 ```env
 # API Base URL
-NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=http://localhost:4000
 ```
 
 ---
@@ -710,6 +911,59 @@ npm start
 
 ## 🐛 문제 해결
 
+### Docker 관련 문제
+
+#### Docker가 실행되지 않음
+```
+Error: Cannot connect to the Docker daemon
+```
+
+**해결 방법:**
+1. Docker Desktop이 실행 중인지 확인
+2. Docker Desktop을 재시작
+
+#### 포트 충돌 오류
+```
+Error: Port 5432 is already allocated
+```
+
+**해결 방법:**
+```bash
+# 포트를 사용 중인 프로세스 확인 (macOS/Linux)
+lsof -i :5432
+
+# 기존 Docker 컨테이너 정리
+docker-compose down
+docker ps -a  # 모든 컨테이너 확인
+docker rm -f <container-id>  # 문제가 되는 컨테이너 강제 제거
+```
+
+#### 볼륨 권한 문제
+```
+Error: Permission denied
+```
+
+**해결 방법:**
+```bash
+# 볼륨 완전 삭제 후 재생성
+./scripts/docker-clean.sh
+./scripts/docker-start.sh
+```
+
+#### 서비스가 Healthy 상태가 되지 않음
+
+**해결 방법:**
+```bash
+# 서비스 로그 확인
+./scripts/docker-logs.sh postgres
+./scripts/docker-logs.sh redis
+./scripts/docker-logs.sh mongodb
+./scripts/docker-logs.sh rabbitmq
+
+# 특정 서비스 재시작
+docker-compose restart postgres
+```
+
 ### PostgreSQL 연결 오류
 ```
 Error: connect ECONNREFUSED 127.0.0.1:5432
@@ -717,9 +971,52 @@ Error: connect ECONNREFUSED 127.0.0.1:5432
 
 **해결 방법:**
 ```bash
+# 서비스 상태 확인
 docker-compose ps
-docker-compose restart postgres
+
+# PostgreSQL 로그 확인
 docker logs board-postgres
+
+# PostgreSQL 컨테이너 재시작
+docker-compose restart postgres
+
+# 데이터베이스 연결 테스트
+docker exec -it board-postgres psql -U board_user -d board_db
+```
+
+### Redis 연결 오류
+
+**해결 방법:**
+```bash
+# Redis 상태 확인
+docker exec -it board-redis redis-cli -a redis_password ping
+# 응답: PONG
+
+# Redis 로그 확인
+docker logs board-redis
+```
+
+### MongoDB 연결 오류
+
+**해결 방법:**
+```bash
+# MongoDB 연결 테스트
+docker exec -it board-mongodb mongosh -u mongo_user -p mongo_password --authenticationDatabase admin
+
+# MongoDB 로그 확인
+docker logs board-mongodb
+```
+
+### RabbitMQ 접속 불가
+
+**해결 방법:**
+```bash
+# RabbitMQ 상태 확인
+docker exec -it board-rabbitmq rabbitmq-diagnostics status
+
+# 관리 UI 접속: http://localhost:15672
+# 사용자명: rabbitmq_user
+# 비밀번호: rabbitmq_password
 ```
 
 ### JWT 토큰 만료
@@ -729,7 +1026,8 @@ docker logs board-postgres
 
 **해결 방법:**
 1. 로그아웃 후 다시 로그인
-2. `.env`의 `JWT_EXPIRATION` 값 확인
+2. `.env`의 `JWT_EXPIRES_IN` 값 확인
+3. Redis에 저장된 세션 확인
 
 ### CORS 오류
 
@@ -739,6 +1037,21 @@ app.enableCors({
   origin: 'http://localhost:3000',
   credentials: true,
 });
+```
+
+### 컨테이너가 계속 재시작됨
+
+**해결 방법:**
+```bash
+# 컨테이너 로그 확인
+docker logs board-postgres --tail 100
+
+# 설정 파일 및 환경 변수 확인
+cat .env
+
+# 완전 초기화 후 재시작
+./scripts/docker-clean.sh
+./scripts/docker-start.sh
 ```
 
 ---

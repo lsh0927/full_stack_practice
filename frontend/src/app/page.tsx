@@ -22,7 +22,7 @@ export default function HomePage() {
                   <>
                     <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
                       <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {user.username[0].toUpperCase()}
+                        {user.username?.[0]?.toUpperCase() || 'U'}
                       </div>
                       <span className="text-sm font-medium text-gray-700">{user.username}</span>
                     </div>

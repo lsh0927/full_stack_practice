@@ -42,3 +42,23 @@ redis_data/
 package-lock.json
 package.json
 .claude
+
+logs
+dev-debug.log
+# Dependency directories
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+.taskmaster/
+
+# MCP and Claude Code configuration
+.mcp.json
+CLAUDE.md
