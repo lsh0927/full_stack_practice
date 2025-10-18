@@ -23,10 +23,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET'),
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET') || 'default-secret-key',
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRATION') || '7d',
+          expiresIn: '7d', // string literal로 명시
         },
       }),
     }),

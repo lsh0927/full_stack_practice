@@ -36,8 +36,9 @@ export class User {
    * - select: false로 기본 쿼리에서 제외
    * - 보안을 위해 명시적으로 선택할 때만 조회 가능
    * - JPA의 @JsonIgnore와 유사한 역할
+   * - nullable: true로 OAuth 사용자 지원
    */
-  @Column({ select: false })
+  @Column({ select: false, nullable: true })
   password: string;
 
   /**

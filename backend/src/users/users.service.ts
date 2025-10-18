@@ -48,9 +48,9 @@ export class UsersService {
 
     // 저장 후 비밀번호 제외하고 반환
     const savedUser = await this.userRepository.save(user);
-    delete savedUser.password;
+    const { password: _, ...userWithoutPassword } = savedUser;
 
-    return savedUser;
+    return userWithoutPassword as User;
   }
 
   /**
@@ -97,7 +97,7 @@ export class UsersService {
         provider,
         providerId,
         profileImage,
-        password: null, // OAuth 사용자는 비밀번호 없음
+        // password 필드는 생략 (nullable이므로 자동으로 null)
       });
 
       user = await this.userRepository.save(user);

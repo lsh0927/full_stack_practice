@@ -35,9 +35,9 @@ export class AuthService {
       return null;
     }
 
-    // 비밀번호 제외하고 반환
-    delete user.password;
-    return user;
+    // 비밀번호 제외하고 반환 (password를 undefined로 설정)
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword as User;
   }
 
   /**
