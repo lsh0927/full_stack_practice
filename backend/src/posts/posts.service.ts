@@ -57,6 +57,18 @@ export class PostsService {
 
   async findOne(id: string): Promise<Post> {
     const post = await this.postModel
+      .findById(id)
+      .exec();
+
+    if (!post) {
+      throw new NotFoundException(`Post with ID ${id} not found`);
+    }
+
+    return post;
+  }
+
+  async incrementViews(id: string): Promise<Post> {
+    const post = await this.postModel
       .findByIdAndUpdate(
         id,
         { $inc: { views: 1 } },
