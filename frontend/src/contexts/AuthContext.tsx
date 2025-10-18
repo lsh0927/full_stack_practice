@@ -28,8 +28,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 앱 시작 시 localStorage에서 토큰 복원
+  // 앱 시작 시 localStorage에서 토큰 복원 (SSR 대응)
   useEffect(() => {
+    // 클라이언트에서만 실행 (localStorage는 브라우저에서만 사용 가능)
+    if (typeof window === 'undefined') {
+      setIsLoading(false);
+      return;
+    }
+
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       setToken(storedToken);
@@ -53,12 +59,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
       } else {
         // 토큰이 유효하지 않으면 제거
-        localStorage.removeItem('token');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+        }
         setToken(null);
       }
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
-      localStorage.removeItem('token');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+      }
       setToken(null);
     } finally {
       setIsLoading(false);
@@ -82,7 +92,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await response.json();
     setToken(data.access_token);
     setUser(data.user);
-    localStorage.setItem('token', data.access_token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', data.access_token);
+    }
   };
 
   const signup = async (email: string, password: string, username: string) => {
@@ -102,13 +114,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await response.json();
     setToken(data.access_token);
     setUser(data.user);
-    localStorage.setItem('token', data.access_token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('token', data.access_token);
+    }
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
   };
 
   return (

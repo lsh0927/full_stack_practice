@@ -1,6 +1,11 @@
+'use client';
+
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function HomePage() {
+  const { user, logout, isLoading } = useAuth();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation Bar */}
@@ -9,12 +14,50 @@ export default function HomePage() {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             Board
           </h1>
-          <Link
-            href="/posts"
-            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
-          >
-            게시판
-          </Link>
+
+          <div className="flex items-center gap-3">
+            {!isLoading && (
+              <>
+                {user ? (
+                  <>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {user.username[0].toUpperCase()}
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">{user.username}</span>
+                    </div>
+                    <button
+                      onClick={logout}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                    >
+                      로그아웃
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/auth/login"
+                      className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                    >
+                      로그인
+                    </Link>
+                    <Link
+                      href="/auth/signup"
+                      className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-semibold transition-all"
+                    >
+                      회원가입
+                    </Link>
+                  </>
+                )}
+              </>
+            )}
+            <Link
+              href="/posts"
+              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
+            >
+              게시판
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -133,7 +176,7 @@ export default function HomePage() {
               <div>
                 <h3 className="text-lg font-bold text-pink-600 mb-4">Backend</h3>
                 <div className="space-y-3">
-                  {['NestJS 11', 'MongoDB 7', 'Mongoose', 'Docker'].map((tech) => (
+                  {['NestJS 11', 'PostgreSQL 16', 'TypeORM', 'JWT Auth'].map((tech) => (
                     <div key={tech} className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-pink-600 rounded-full"></div>
                       <span className="text-gray-700">{tech}</span>
