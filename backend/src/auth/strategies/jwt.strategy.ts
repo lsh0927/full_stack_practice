@@ -20,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // Bearer Token에서 추출
       ignoreExpiration: false, // 만료된 토큰 거부
-      secretOrKey: configService.get<string>('JWT_SECRET'), // 환경 변수에서 시크릿 키 가져오기
+      secretOrKey: configService.get<string>('JWT_SECRET') || 'default-secret-key', // 환경 변수에서 시크릿 키 가져오기
     });
   }
 
