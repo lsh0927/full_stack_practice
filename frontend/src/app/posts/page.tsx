@@ -6,8 +6,8 @@ import { Post } from '@/types/post';
 
 const API_URL = 'http://localhost:3000';
 
-// 백엔드 API 응답의 타입을 정의합니다
-// 이제는 단순한 배열이 아니라 페이지네이션 정보를 포함한 객체입니다
+// 백엔드 API 응답의 타입을 정의
+// 이제는 단순한 배열이 아니라 페이지네이션 정보를 포함한 객체
 interface PostsResponse {
   posts: Post[];
   total: number;
@@ -27,33 +27,33 @@ function formatDate(dateString: string): string {
 }
 
 export default function PostsPage() {
-  // 게시글 목록과 페이지네이션 정보를 상태로 관리합니다
+  // 게시글 목록과 페이지네이션 정보를 상태로 관리
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
 
-  // 검색어를 상태로 관리합니다
+  // 검색어를 상태로 관리
   // searchInput은 입력 필드에 표시되는 값이고
-  // searchQuery는 실제로 API에 전달되는 검색어입니다
+  // searchQuery는 실제로 API에 전달되는 검색어
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // 로딩과 에러 상태도 관리합니다
+  // 로딩과 에러 상태도 관리
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 페이지나 검색어가 변경될 때마다 데이터를 다시 불러옵니다
+  // 페이지나 검색어가 변경될 때마다 데이터를 다시 불러옴
   // useEffect의 의존성 배열에 currentPage와 searchQuery를 넣어서
-  // 이 값들이 바뀔 때마다 자동으로 실행되도록 합니다
+  // 이 값들이 바뀔 때마다 자동으로 실행되도록 함
   useEffect(() => {
     async function fetchPosts() {
       setLoading(true);
       setError('');
 
       try {
-        // 쿼리 파라미터를 만듭니다
-        // searchQuery가 있으면 search 파라미터를 추가합니다
+        // 쿼리 파라미터를 만듦
+        // searchQuery가 있으면 search 파라미터를 추가
         const params = new URLSearchParams({
           page: currentPage.toString(),
           limit: '10',
@@ -71,8 +71,8 @@ export default function PostsPage() {
           throw new Error('게시글을 불러오는데 실패했습니다');
         }
 
-        // 이제 응답은 배열이 아니라 객체입니다
-        // posts, total, page, totalPages를 모두 추출합니다
+        // 이제 응답은 배열이 아니라 객체
+        // posts, total, page, totalPages를 모두 추출
         const data: PostsResponse = await response.json();
         setPosts(data.posts);
         setTotalPages(data.totalPages);
@@ -87,30 +87,30 @@ export default function PostsPage() {
     fetchPosts();
   }, [currentPage, searchQuery]);
 
-  // 검색 버튼을 클릭하면 실행되는 함수입니다
+  // 검색 버튼을 클릭하면 실행되는 함수
   // searchInput의 값을 searchQuery에 설정하면
-  // useEffect가 자동으로 실행되어 새로운 검색 결과를 불러옵니다
+  // useEffect가 자동으로 실행되어 새로운 검색 결과를 불러옴
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchQuery(searchInput);
-    setCurrentPage(1); // 검색할 때는 항상 1페이지로 돌아갑니다
+    setCurrentPage(1); // 검색할 때는 항상 1페이지로 돌아감
   };
 
-  // 검색을 초기화하는 함수입니다
+  // 검색을 초기화하는 함수
   const handleClearSearch = () => {
     setSearchInput('');
     setSearchQuery('');
     setCurrentPage(1);
   };
 
-  // 페이지 번호를 클릭하면 실행되는 함수입니다
+  // 페이지 번호를 클릭하면 실행되는 함수
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // 페이지를 변경하면 스크롤을 맨 위로 올립니다
+    // 페이지를 변경하면 스크롤을 맨 위로 올림
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 로딩 중일 때 표시할 화면입니다
+  // 로딩 중일 때 표시할 화면
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -123,7 +123,7 @@ export default function PostsPage() {
     );
   }
 
-  // 에러가 발생했을 때 표시할 화면입니다
+  // 에러가 발생했을 때 표시할 화면
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -145,7 +145,7 @@ export default function PostsPage() {
           <Link
             href="/"
             className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-          >
+          >ㅇ
             홈으로
           </Link>
           <Link
