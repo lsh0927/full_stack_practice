@@ -50,14 +50,11 @@ export default function PostDetailPage({
         setPost(data);
         setLoading(false);
 
-        // 조회수 증가는 한 번만 호출
         if (!viewCountedRef.current) {
           viewCountedRef.current = true;
           fetch(`${API_URL}/posts/${params.id}/views`, {
             method: 'POST',
-          }).catch(() => {
-            // 조회수 증가 실패는 무시 (사용자 경험에 영향 없음)
-          });
+          }).catch(() => {});
         }
       } catch (err) {
         setError('게시글을 불러오는 중 오류가 발생했습니다.');
@@ -91,10 +88,10 @@ export default function PostDetailPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">로딩 중...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="flex justify-center items-center h-96">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
           </div>
         </div>
       </div>
@@ -103,18 +100,16 @@ export default function PostDetailPage({
 
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="mb-6">
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-red-600 mb-4">{error || '게시글을 찾을 수 없습니다.'}</p>
             <Link
               href="/posts"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
+              className="text-purple-600 hover:underline"
             >
-              ← 목록으로
+              목록으로 돌아가기
             </Link>
-          </div>
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-red-600 text-lg">{error || '게시글을 찾을 수 없습니다.'}</p>
           </div>
         </div>
       </div>
@@ -122,60 +117,87 @@ export default function PostDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="mb-6">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Board
+          </Link>
           <Link
             href="/posts"
-            className="text-blue-600 hover:text-blue-800 hover:underline"
+            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
           >
-            ← 목록으로
+            목록
           </Link>
         </div>
+      </header>
 
-        <article className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="border-b bg-gray-50 px-8 py-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Post Card */}
+        <article className="bg-white rounded-lg shadow-sm overflow-hidden">
+          {/* Post Header */}
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                {post.author[0].toUpperCase()}
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="font-semibold text-gray-900">{post.author}</p>
+                <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>{post.views}</span>
+              </div>
+            </div>
+
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {post.title}
             </h1>
-            <div className="flex items-center text-sm text-gray-600 gap-4">
-              <span className="font-medium">{post.author}</span>
-              <span>•</span>
-              <span>{formatDate(post.createdAt)}</span>
-              <span>•</span>
-              <span>조회 {post.views}</span>
-            </div>
           </div>
 
-          <div className="px-8 py-8">
-            <div className="text-gray-900 leading-relaxed whitespace-pre-wrap">
+          {/* Post Content */}
+          <div className="p-6">
+            <div className="text-gray-800 leading-relaxed whitespace-pre-wrap text-lg">
               {post.content}
             </div>
           </div>
 
-          <div className="border-t bg-gray-50 px-8 py-4 flex justify-between">
-            <Link
-              href="/posts"
-              className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
-            >
-              목록
-            </Link>
-            <div className="flex gap-2">
+          {/* Post Footer */}
+          <div className="p-6 bg-gray-50 border-t border-gray-100">
+            <div className="flex gap-3 justify-end">
               <Link
                 href={`/posts/${post._id}/edit`}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors"
               >
                 수정
               </Link>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                className="px-6 py-2.5 bg-red-50 border border-red-200 text-red-600 rounded-full font-medium hover:bg-red-100 transition-colors"
               >
                 삭제
               </button>
             </div>
           </div>
         </article>
+
+        {/* Back to List */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/posts"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            목록으로 돌아가기
+          </Link>
+        </div>
       </div>
     </div>
   );

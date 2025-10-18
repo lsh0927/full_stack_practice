@@ -6,8 +6,6 @@ import { Post } from '@/types/post';
 
 const API_URL = 'http://localhost:3000';
 
-// 백엔드 API 응답의 타입을 정의
-// 이제는 단순한 배열이 아니라 페이지네이션 정보를 포함한 객체
 interface PostsResponse {
   posts: Post[];
   total: number;
@@ -17,43 +15,46 @@ interface PostsResponse {
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 7) {
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  } else if (days > 0) {
+    return `${days}일 전`;
+  } else if (hours > 0) {
+    return `${hours}시간 전`;
+  } else if (minutes > 0) {
+    return `${minutes}분 전`;
+  } else {
+    return '방금 전';
+  }
 }
 
 export default function PostsPage() {
-  // 게시글 목록과 페이지네이션 정보를 상태로 관리
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-
-  // 검색어를 상태로 관리
-  // searchInput은 입력 필드에 표시되는 값이고
-  // searchQuery는 실제로 API에 전달되는 검색어
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // 로딩과 에러 상태도 관리
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 페이지나 검색어가 변경될 때마다 데이터를 다시 불러옴
-  // useEffect의 의존성 배열에 currentPage와 searchQuery를 넣어서
-  // 이 값들이 바뀔 때마다 자동으로 실행되도록 함
   useEffect(() => {
     async function fetchPosts() {
       setLoading(true);
       setError('');
 
       try {
-        // 쿼리 파라미터를 만듦
-        // searchQuery가 있으면 search 파라미터를 추가
         const params = new URLSearchParams({
           page: currentPage.toString(),
           limit: '10',
@@ -71,8 +72,6 @@ export default function PostsPage() {
           throw new Error('게시글을 불러오는데 실패했습니다');
         }
 
-        // 이제 응답은 배열이 아니라 객체
-        // posts, total, page, totalPages를 모두 추출
         const data: PostsResponse = await response.json();
         setPosts(data.posts);
         setTotalPages(data.totalPages);
@@ -87,49 +86,47 @@ export default function PostsPage() {
     fetchPosts();
   }, [currentPage, searchQuery]);
 
-  // 검색 버튼을 클릭하면 실행되는 함수
-  // searchInput의 값을 searchQuery에 설정하면
-  // useEffect가 자동으로 실행되어 새로운 검색 결과를 불러옴
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchQuery(searchInput);
-    setCurrentPage(1); // 검색할 때는 항상 1페이지로 돌아감
+    setCurrentPage(1);
   };
 
-  // 검색을 초기화하는 함수
   const handleClearSearch = () => {
     setSearchInput('');
     setSearchQuery('');
     setCurrentPage(1);
   };
 
-  // 페이지 번호를 클릭하면 실행되는 함수
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // 페이지를 변경하면 스크롤을 맨 위로 올림
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 로딩 중일 때 표시할 화면
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">로딩 중...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="flex justify-center items-center h-96">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
           </div>
         </div>
       </div>
     );
   }
 
-  // 에러가 발생했을 때 표시할 화면
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-red-600 text-lg">{error}</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Link
+              href="/"
+              className="text-purple-600 hover:underline"
+            >
+              홈으로 돌아가기
+            </Link>
           </div>
         </div>
       </div>
@@ -137,159 +134,172 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        {/* 헤더 영역: 제목과 글쓰기 버튼 */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">게시판</h1>
-          <Link
-            href="/"
-            className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-          >ㅇ
-            홈으로
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Board
           </Link>
+
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="flex-1 max-w-md mx-8">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="검색..."
+                className="w-full px-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </form>
+
           <Link
             href="/posts/new"
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
           >
-            글쓰기
+            작성
           </Link>
         </div>
+      </header>
 
-        {/* 검색 영역 */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="제목이나 내용으로 검색하세요"
-              className="flex-1 px-4 py-2 text-black font-medium border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-400"
-            />
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Search Info */}
+        {searchQuery && (
+          <div className="mb-6 flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
+            <p className="text-gray-600">
+              '<span className="font-semibold text-gray-900">{searchQuery}</span>' 검색 결과: {total}개
+            </p>
             <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={handleClearSearch}
+              className="text-purple-600 hover:text-purple-700 font-medium"
             >
-              검색
+              초기화
             </button>
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                초기화
-              </button>
-            )}
-          </form>
-          {/* 검색 결과 정보 표시 */}
-          {searchQuery && (
-            <p className="mt-2 text-sm text-gray-600">
-              "{searchQuery}" 검색 결과: {total}개
-            </p>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* 게시글이 없을 때 */}
+        {/* Posts List */}
         {posts.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-gray-500 text-lg">
-              {searchQuery
-                ? '검색 결과가 없습니다.'
-                : '작성된 게시글이 없습니다.'}
-            </p>
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+            <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="text-gray-500 mb-4">게시글이 없습니다</p>
+            <Link
+              href="/posts/new"
+              className="inline-block px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors"
+            >
+              첫 게시글 작성하기
+            </Link>
           </div>
         ) : (
-          <>
-            {/* 게시글 목록 테이블 */}
-            <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-              <table className="w-full">
-                <thead className="bg-gray-100 border-b">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                      제목
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                      작성자
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                      조회수
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                      작성일
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {posts.map((post) => (
-                    <tr
-                      key={post._id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <Link
-                          href={`/posts/${post._id}`}
-                          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                        >
-                          {post.title}
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {post.author}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {post.views}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {formatDate(post.createdAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="space-y-4">
+            {posts.map((post) => (
+              <Link
+                key={post._id}
+                href={`/posts/${post._id}`}
+                className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="p-6">
+                  {/* Post Header */}
+                  <div className="flex items-center mb-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
+                      {post.author[0].toUpperCase()}
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <p className="font-semibold text-gray-900">{post.author}</p>
+                      <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
+                    </div>
+                  </div>
+
+                  {/* Post Content */}
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
+                    {post.title}
+                  </h2>
+                  <p className="text-gray-600 line-clamp-2 mb-4">
+                    {post.content}
+                  </p>
+
+                  {/* Post Footer */}
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <span>{post.views}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{formatDate(post.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-8 flex justify-center items-center gap-2">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            <div className="flex gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`w-10 h-10 rounded-lg font-medium transition-all ${
+                    currentPage === page
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                      : 'hover:bg-white text-gray-600'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
             </div>
 
-            {/* 페이지네이션 버튼 영역 */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2">
-                {/* 이전 페이지 버튼 */}
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 bg-black border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  이전
-                </button>
-
-                {/* 페이지 번호 버튼들 */}
-                {/* 전체 페이지 수만큼 버튼을 생성합니다 */}
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={`px-4 py-2 rounded-lg transition-colors ${currentPage === page
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-black border border-gray-300 hover:bg-gray-50'
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  ),
-                )}
-
-                {/* 다음 페이지 버튼 */}
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-black border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  다음
-                </button>
-              </div>
-            )}
-          </>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
         )}
+
+        {/* Total Count */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          전체 {total}개의 게시글
+        </div>
       </div>
     </div>
   );
