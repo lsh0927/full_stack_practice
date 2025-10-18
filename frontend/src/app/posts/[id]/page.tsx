@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types/post';
@@ -27,6 +27,7 @@ export default function PostDetailPage({
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const viewCountedRef = useRef(false);
 
   useEffect(() => {
     async function fetchPost() {
@@ -48,6 +49,16 @@ export default function PostDetailPage({
         const data = await response.json();
         setPost(data);
         setLoading(false);
+
+        // 조회수 증가는 한 번만 호출
+        if (!viewCountedRef.current) {
+          viewCountedRef.current = true;
+          fetch(`${API_URL}/posts/${params.id}/views`, {
+            method: 'POST',
+          }).catch(() => {
+            // 조회수 증가 실패는 무시 (사용자 경험에 영향 없음)
+          });
+        }
       } catch (err) {
         setError('게시글을 불러오는 중 오류가 발생했습니다.');
         setLoading(false);
