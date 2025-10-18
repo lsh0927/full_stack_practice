@@ -215,7 +215,7 @@ export default function PostsPage() {
         {searchQuery && (
           <div className="mb-6 flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
             <p className="text-gray-600">
-              '<span className="font-semibold text-gray-900">{searchQuery}</span>' 검색 결과: {total}개
+              &apos;<span className="font-semibold text-gray-900">{searchQuery}</span>&apos; 검색 결과: {total}개
             </p>
             <button
               onClick={handleClearSearch}

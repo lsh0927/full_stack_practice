@@ -11,6 +11,7 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -73,5 +74,31 @@ export class AuthController {
       profileImage: user.profileImage,
       provider: user.provider,
     };
+  }
+
+  /**
+   * Access Token 갱신
+   * POST /auth/refresh
+   *
+   * Refresh Token을 사용하여 새로운 Access Token 발급
+   */
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshToken(refreshTokenDto.refresh_token);
+  }
+
+  /**
+   * 로그아웃
+   * POST /auth/logout
+   *
+   * Redis에서 Refresh Token 삭제
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@CurrentUser() user: User) {
+    await this.authService.logout(user.id);
+    return { message: '로그아웃 되었습니다.' };
   }
 }

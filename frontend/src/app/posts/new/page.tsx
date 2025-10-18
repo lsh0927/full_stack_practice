@@ -61,8 +61,8 @@ export default function NewPostPage() {
 
       const newPost = await response.json();
       router.push(`/posts/${newPost.id}`);
-    } catch (err: any) {
-      setError(err.message || '게시글 작성 중 오류가 발생했습니다');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '게시글 작성 중 오류가 발생했습니다');
       setLoading(false);
     }
   };
