@@ -1,52 +1,80 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export default function NewPostPage() {
   const router = useRouter();
+  const { user, token, isLoading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    author: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // 인증되지 않은 사용자는 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/auth/login');
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    if (!formData.title || !formData.content || !formData.author) {
+    if (!formData.title || !formData.content) {
       setError('모든 필드를 입력해주세요');
       setLoading(false);
       return;
     }
 
+    if (!token) {
+      setError('로그인이 필요합니다');
+      setLoading(false);
+      return;
+    }
+
     try {
+      // JWT 토큰을 Authorization 헤더에 담아서 전송
       const response = await fetch(`${API_URL}/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // NestJS JwtAuthGuard가 이 헤더를 확인
         },
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('인증이 필요합니다. 다시 로그인해주세요.');
+        }
         throw new Error('게시글 작성에 실패했습니다');
       }
 
       const newPost = await response.json();
-      router.push(`/posts/${newPost._id}`);
-    } catch (err) {
-      setError('게시글 작성 중 오류가 발생했습니다');
+      router.push(`/posts/${newPost.id}`);
+    } catch (err: any) {
+      setError(err.message || '게시글 작성 중 오류가 발생했습니다');
       setLoading(false);
     }
   };
+
+  // 로딩 중이거나 인증되지 않은 경우
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -77,21 +105,17 @@ export default function NewPostPage() {
             </div>
           )}
 
-          <div>
-            <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-2">
-              작성자
-            </label>
-            <input
-              id="author"
-              type="text"
-              value={formData.author}
-              onChange={(e) =>
-                setFormData({ ...formData, author: e.target.value })
-              }
-              placeholder="이름을 입력하세요"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-              required
-            />
+          {/* 로그인된 사용자 정보 표시 */}
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
+                {user.username[0].toUpperCase()}
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900">{user.username}</p>
+                <p className="text-sm text-gray-600">{user.email}</p>
+              </div>
+            </div>
           </div>
 
           <div>

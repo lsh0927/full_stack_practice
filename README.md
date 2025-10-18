@@ -1,6 +1,6 @@
 # 📝 Board Project
 
-풀스택 게시판 애플리케이션 - NestJS + Next.js + MongoDB
+풀스택 게시판 애플리케이션 - NestJS + Next.js + PostgreSQL + JWT 인증
 
 ## 📚 목차
 
@@ -18,12 +18,15 @@
 
 ## 🎯 프로젝트 소개
 
-이 프로젝트는 현대적인 풀스택 웹 개발 기술을 활용한 게시판 애플리케이션입니다.
-백엔드는 NestJS로 RESTful API를 구현하고, 프론트엔드는 Next.js 15의 App Router를 사용하여
-서버 사이드 렌더링과 클라이언트 사이드 렌더링을 혼합한 하이브리드 렌더링을 구현했습니다.
+현대적인 풀스택 웹 개발 기술을 활용한 게시판 애플리케이션입니다.
+백엔드는 NestJS + PostgreSQL + TypeORM으로 구현하고, JWT 기반 인증 시스템을 적용했습니다.
+프론트엔드는 Next.js 15 App Router를 사용하여 SSR/CSR 하이브리드 렌더링을 구현했습니다.
 
 ### 프로젝트 목표
 - RESTful API 설계 및 구현
+- JWT 기반 인증 시스템 (Spring Security 패턴)
+- TypeORM을 활용한 N+1 쿼리 방지
+- PostgreSQL을 활용한 관계형 데이터 모델링
 - TypeScript를 활용한 타입 안전성 확보
 - Docker를 활용한 개발 환경 표준화
 - 페이지네이션 및 검색 기능 구현
@@ -36,8 +39,11 @@
 ### Backend
 - **NestJS** `11.0.1` - Progressive Node.js Framework
 - **TypeScript** `5.7.3` - Type-safe JavaScript
-- **MongoDB** `7.0` - NoSQL Database
-- **Mongoose** `8.19.1` - MongoDB ODM
+- **PostgreSQL** `16` - Relational Database
+- **TypeORM** `0.3.21` - ORM for TypeScript/JavaScript
+- **Passport** `0.7.0` - Authentication middleware
+- **JWT** `10.2.0` - JSON Web Token
+- **bcrypt** `5.1.1` - Password hashing
 - **class-validator** - DTO 유효성 검사
 - **class-transformer** - 객체 변환
 
@@ -50,6 +56,7 @@
 ### Infrastructure
 - **Docker** - 컨테이너화
 - **Docker Compose** - 멀티 컨테이너 오케스트레이션
+- **PostgreSQL 16 Alpine** - 데이터베이스 컨테이너
 - **Redis** `7` - 캐싱 (설정됨, 향후 확장 가능)
 
 ### Development Tools
@@ -73,105 +80,181 @@
 │                   Port: 3001                                 │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  App Router (SSR/CSR Hybrid)                        │   │
+│  │  - / (홈페이지)                                      │   │
 │  │  - /posts (게시글 목록)                              │   │
 │  │  - /posts/[id] (게시글 상세)                         │   │
-│  │  - /posts/new (게시글 작성)                          │   │
-│  │  - /posts/[id]/edit (게시글 수정)                    │   │
+│  │  - /posts/new (게시글 작성) 🔐                       │   │
+│  │  - /auth/login (로그인)                              │   │
+│  │  - /auth/signup (회원가입)                           │   │
+│  │                                                       │   │
+│  │  AuthContext - JWT 토큰 관리, 사용자 상태 관리       │   │
 │  └─────────────────────────────────────────────────────┘   │
 └───────────────────────┬─────────────────────────────────────┘
-                        │ REST API
+                        │ REST API (Authorization: Bearer <token>)
                         ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                  Backend (NestJS)                            │
-│                   Port: 3000                                 │
+│                   Port: 3001                                 │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  🔐 Authentication (Passport + JWT)                 │   │
+│  │  - LocalStrategy (email/password)                   │   │
+│  │  - JwtStrategy (Bearer token)                       │   │
+│  │  - JwtAuthGuard (Spring Security와 유사)           │   │
+│  │  - @CurrentUser decorator                           │   │
+│  └─────────────────────────────────────────────────────┘   │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  Controllers                                         │   │
+│  │  ┌─────────────────────────────────────────────┐   │   │
+│  │  │  AuthController                             │   │   │
+│  │  │  - POST /auth/signup                        │   │   │
+│  │  │  - POST /auth/login                         │   │   │
+│  │  │  - GET /auth/me 🔐                          │   │   │
+│  │  └─────────────────────────────────────────────┘   │   │
 │  │  ┌─────────────────────────────────────────────┐   │   │
 │  │  │  PostsController                            │   │   │
 │  │  │  - CRUD Operations                          │   │   │
 │  │  │  - Pagination & Search                      │   │   │
 │  │  │  - View Count Management                    │   │   │
+│  │  │  - 생성/수정/삭제: JWT 인증 필수 🔐         │   │   │
 │  │  └─────────────────────────────────────────────┘   │   │
 │  └─────────────────────────────────────────────────────┘   │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  Services                                            │   │
 │  │  ┌─────────────────────────────────────────────┐   │   │
+│  │  │  AuthService                                │   │   │
+│  │  │  - bcrypt 비밀번호 해싱                     │   │   │
+│  │  │  - JWT 토큰 생성/검증                       │   │   │
+│  │  └─────────────────────────────────────────────┘   │   │
+│  │  ┌─────────────────────────────────────────────┐   │   │
 │  │  │  PostsService                               │   │   │
 │  │  │  - Business Logic                           │   │   │
-│  │  │  - Database Operations                      │   │   │
+│  │  │  - TypeORM QueryBuilder (N+1 방지)         │   │   │
+│  │  │  - leftJoinAndSelect로 author 조회         │   │   │
 │  │  └─────────────────────────────────────────────┘   │   │
 │  └─────────────────────────────────────────────────────┘   │
 └───────────────────────┬─────────────────────────────────────┘
-                        │ Mongoose ODM
+                        │ TypeORM
                         ▼
 ┌─────────────────────────────────────────────────────────────┐
 │              Docker Compose Services                         │
 │  ┌───────────────────────┐  ┌──────────────────────────┐   │
-│  │  MongoDB               │  │  Redis                   │   │
-│  │  Port: 27017           │  │  Port: 6379              │   │
-│  │  - Posts Collection    │  │  - Cache (Future Use)    │   │
-│  │  - Auth: admin/***     │  │  - Session (Future Use)  │   │
-│  │  - Volume: mongodb_data│  │  - Volume: redis_data    │   │
+│  │  PostgreSQL 16         │  │  Redis                   │   │
+│  │  Port: 5432            │  │  Port: 6379              │   │
+│  │  - users 테이블        │  │  - Cache (Future Use)    │   │
+│  │  - posts 테이블        │  │  - Session (Future Use)  │   │
+│  │  - FK: authorId → id   │  │  - Volume: redis_data    │   │
+│  │  - Volume: postgres_data│  │                          │   │
 │  └───────────────────────┘  └──────────────────────────┘   │
+│  ┌───────────────────────┐                                  │
+│  │  MongoDB (migration)   │  ⚠️ --profile migration 시에만  │
+│  │  Port: 27017           │     실행 (데이터 마이그레이션용) │
+│  └───────────────────────┘                                  │
 │                                                              │
 │              Network: board-network                          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 데이터 흐름
+### 데이터베이스 스키마
+
+```sql
+-- users 테이블
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR UNIQUE NOT NULL,
+  password VARCHAR NOT NULL,  -- bcrypt 해싱
+  username VARCHAR NOT NULL,
+  profile_image VARCHAR,
+  provider VARCHAR,           -- 'local' | 'kakao'
+  provider_id VARCHAR,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- posts 테이블
+CREATE TABLE posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR NOT NULL,
+  content TEXT NOT NULL,
+  views INTEGER DEFAULT 0,
+  author_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 인덱스
+CREATE INDEX idx_posts_author_id ON posts(author_id);
+CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
+```
+
+### 인증 흐름
 
 ```
-[사용자 요청]
-    ↓
-[Next.js Frontend] - 사용자 인터랙션 처리
-    ↓
-[fetch API] - REST API 호출
-    ↓
-[NestJS Controller] - 요청 검증 및 라우팅
-    ↓
-[Service Layer] - 비즈니스 로직 처리
-    ↓
-[Mongoose ODM] - 데이터 모델링 및 쿼리
-    ↓
-[MongoDB] - 데이터 저장소
-    ↓
-[응답 반환] - JSON 형식
-    ↓
-[Frontend 렌더링] - UI 업데이트
+[회원가입]
+클라이언트 → POST /auth/signup { email, password, username }
+           → AuthService: bcrypt로 비밀번호 해싱
+           → UsersService: DB에 저장
+           → JWT 토큰 생성 및 반환
+           → 클라이언트: localStorage에 토큰 저장
+
+[로그인]
+클라이언트 → POST /auth/login { email, password }
+           → LocalStrategy: 이메일/비밀번호 검증
+           → bcrypt.compare()로 비밀번호 확인
+           → JWT 토큰 생성 및 반환
+           → 클라이언트: localStorage에 토큰 저장
+
+[인증이 필요한 요청]
+클라이언트 → Authorization: Bearer <token>
+           → JwtAuthGuard: 토큰 추출
+           → JwtStrategy: 토큰 검증 및 payload 추출
+           → @CurrentUser: 사용자 정보를 컨트롤러에 전달
+           → 비즈니스 로직 실행
 ```
 
 ---
 
 ## ✨ 주요 기능
 
-### 1. 게시글 관리 (CRUD)
-- ✅ 게시글 생성 (제목, 내용, 작성자)
-- ✅ 게시글 목록 조회 (페이지네이션)
-- ✅ 게시글 상세 조회
-- ✅ 게시글 수정
-- ✅ 게시글 삭제
+### 1. 인증 시스템 🔐
+- ✅ 회원가입 (이메일, 비밀번호, 사용자명)
+- ✅ 로그인 (JWT 토큰 발급)
+- ✅ 로그아웃 (클라이언트 토큰 제거)
+- ✅ 비밀번호 bcrypt 해싱 (salt rounds: 10)
+- ✅ JWT 기반 인증 (Bearer token)
+- ✅ 토큰 자동 복원 (localStorage)
+- ✅ 보호된 라우트 (로그인 필요)
+- 🚧 카카오 OAuth2 (준비됨, 미구현)
 
-### 2. 검색 & 필터링
-- ✅ 제목/내용 통합 검색 (대소문자 구분 없음)
+### 2. 게시글 관리 (CRUD)
+- ✅ 게시글 생성 (제목, 내용) 🔐 **인증 필수**
+- ✅ 게시글 목록 조회 (페이지네이션)
+- ✅ 게시글 상세 조회 (작성자 정보 포함)
+- ✅ 게시글 수정 🔐 **작성자만 가능**
+- ✅ 게시글 삭제 🔐 **작성자만 가능**
+- ✅ N+1 쿼리 방지 (leftJoinAndSelect)
+
+### 3. 검색 & 필터링
+- ✅ 제목/내용 통합 검색 (ILIKE, 대소문자 구분 없음)
 - ✅ 실시간 검색 결과 반영
 - ✅ 검색 초기화 기능
 
-### 3. 페이지네이션
+### 4. 페이지네이션
 - ✅ 페이지당 10개 게시글 표시
 - ✅ 페이지 번호 네비게이션
 - ✅ 전체 게시글 수 표시
 
-### 4. 조회수 시스템
+### 5. 조회수 시스템
 - ✅ 게시글 조회 시 조회수 자동 증가
 - ✅ React Strict Mode 대응 (useRef 활용)
 - ✅ Atomic operation으로 동시성 보장
 
-### 5. UI/UX
+### 6. UI/UX
+- ✅ 인스타그램 스타일 모던 UI
 - ✅ 반응형 디자인 (Tailwind CSS)
 - ✅ 로딩 상태 표시
 - ✅ 에러 핸들링 및 사용자 피드백
-- ✅ 삭제 확인 다이얼로그
-- ✅ 날짜 포맷팅 (한국어)
+- ✅ 날짜 포맷팅 (상대 시간)
+- ✅ 로그인 상태에 따른 헤더 변경
 
 ---
 
@@ -197,10 +280,10 @@ cd full_stack_practice
 
 #### 2. Docker 서비스 시작
 
-MongoDB와 Redis를 Docker Compose로 실행합니다.
+PostgreSQL을 Docker Compose로 실행합니다.
 
 ```bash
-docker-compose up -d
+docker-compose up -d postgres
 ```
 
 서비스 확인:
@@ -210,12 +293,29 @@ docker-compose ps
 
 예상 출력:
 ```
-NAME                IMAGE               STATUS              PORTS
-board-mongodb       mongo:7.0           Up 2 minutes        0.0.0.0:27017->27017/tcp
-board-redis         redis:7-alpine      Up 2 minutes        0.0.0.0:6379->6379/tcp
+NAME                IMAGE                  STATUS                   PORTS
+board-postgres      postgres:16-alpine     Up 2 minutes (healthy)   0.0.0.0:5432->5432/tcp
 ```
 
-#### 3. 백엔드 설정 및 실행
+#### 3. 백엔드 환경 변수 설정
+
+```bash
+cd backend
+
+# .env 파일 생성 (.env.example 참고)
+cat > .env <<EOF
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=admin
+DATABASE_PASSWORD=admin123
+DATABASE_NAME=board
+
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_EXPIRATION=7d
+EOF
+```
+
+#### 4. 백엔드 실행
 
 ```bash
 cd backend
@@ -223,23 +323,21 @@ cd backend
 # 의존성 설치
 npm install
 
-# 환경 변수 설정 (.env 파일이 이미 있는지 확인)
-# 없다면 .env 파일 생성:
-echo "MONGODB_URI=mongodb://admin:admin123@localhost:27017/board?authSource=admin" > .env
-
 # 개발 모드로 실행
 npm run start:dev
 ```
 
-백엔드가 `http://localhost:3000`에서 실행됩니다.
+백엔드가 `http://localhost:3001`에서 실행됩니다.
+
+**중요**: TypeORM의 `synchronize: true` 옵션으로 인해 첫 실행 시 자동으로 테이블이 생성됩니다.
 
 API 헬스 체크:
 ```bash
-curl http://localhost:3000
+curl http://localhost:3001
 # 출력: {"message":"Hello World!"}
 ```
 
-#### 4. 프론트엔드 설정 및 실행
+#### 5. 프론트엔드 실행
 
 새 터미널을 열어 프론트엔드를 실행합니다.
 
@@ -249,15 +347,24 @@ cd frontend
 # 의존성 설치
 npm install
 
+# .env.local 파일 생성 (선택사항)
+echo "NEXT_PUBLIC_API_URL=http://localhost:3001" > .env.local
+
 # 개발 모드로 실행
 npm run dev
 ```
 
-프론트엔드가 `http://localhost:3001`에서 실행됩니다.
+프론트엔드가 `http://localhost:3000`에서 실행됩니다.
 
-#### 5. 애플리케이션 접속
+#### 6. 애플리케이션 접속
 
-브라우저에서 http://localhost:3001 을 열면 게시판 애플리케이션을 사용할 수 있습니다.
+브라우저에서 http://localhost:3000 을 열면 게시판 애플리케이션을 사용할 수 있습니다.
+
+**첫 사용 가이드:**
+1. 회원가입 버튼 클릭
+2. 이메일, 비밀번호, 사용자명 입력
+3. 자동으로 로그인되고 JWT 토큰이 발급됩니다
+4. "작성" 버튼으로 게시글을 작성할 수 있습니다
 
 ### 종료하기
 
@@ -278,33 +385,104 @@ docker-compose down -v
 
 ### Base URL
 ```
-http://localhost:3000
+http://localhost:3001
 ```
 
-### Endpoints
+### Authentication Endpoints
 
-#### 1. 게시글 생성
+#### 1. 회원가입
 ```http
-POST /posts
+POST /auth/signup
 Content-Type: application/json
 
 {
-  "title": "게시글 제목",
-  "content": "게시글 내용",
-  "author": "작성자"
+  "email": "user@example.com",
+  "password": "password123",
+  "username": "홍길동"
 }
 ```
 
 **응답 (201 Created)**
 ```json
 {
-  "_id": "65a1b2c3d4e5f6g7h8i9j0k1",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "uuid-here",
+    "email": "user@example.com",
+    "username": "홍길동"
+  }
+}
+```
+
+#### 2. 로그인
+```http
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**응답 (200 OK)**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "uuid-here",
+    "email": "user@example.com",
+    "username": "홍길동"
+  }
+}
+```
+
+#### 3. 현재 사용자 정보 조회
+```http
+GET /auth/me
+Authorization: Bearer <access_token>
+```
+
+**응답 (200 OK)**
+```json
+{
+  "id": "uuid-here",
+  "email": "user@example.com",
+  "username": "홍길동",
+  "profileImage": null,
+  "provider": "local"
+}
+```
+
+### Posts Endpoints
+
+#### 1. 게시글 생성 🔐
+```http
+POST /posts
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "title": "게시글 제목",
+  "content": "게시글 내용"
+}
+```
+
+**응답 (201 Created)**
+```json
+{
+  "id": "uuid-here",
   "title": "게시글 제목",
   "content": "게시글 내용",
-  "author": "작성자",
   "views": 0,
-  "createdAt": "2024-01-15T10:30:00.000Z",
-  "updatedAt": "2024-01-15T10:30:00.000Z"
+  "authorId": "user-uuid",
+  "createdAt": "2025-01-18T10:30:00.000Z",
+  "updatedAt": "2025-01-18T10:30:00.000Z",
+  "author": {
+    "id": "user-uuid",
+    "username": "홍길동",
+    "email": "user@example.com"
+  }
 }
 ```
 
@@ -313,23 +491,21 @@ Content-Type: application/json
 GET /posts?page=1&limit=10&search=검색어
 ```
 
-**Query Parameters**
-- `page` (optional): 페이지 번호 (default: 1)
-- `limit` (optional): 페이지당 게시글 수 (default: 10)
-- `search` (optional): 검색어 (제목/내용 검색)
-
 **응답 (200 OK)**
 ```json
 {
   "posts": [
     {
-      "_id": "65a1b2c3d4e5f6g7h8i9j0k1",
+      "id": "uuid-here",
       "title": "게시글 제목",
       "content": "게시글 내용",
-      "author": "작성자",
       "views": 5,
-      "createdAt": "2024-01-15T10:30:00.000Z",
-      "updatedAt": "2024-01-15T10:30:00.000Z"
+      "createdAt": "2025-01-18T10:30:00.000Z",
+      "author": {
+        "id": "user-uuid",
+        "username": "홍길동",
+        "email": "user@example.com"
+      }
     }
   ],
   "total": 100,
@@ -346,13 +522,16 @@ GET /posts/:id
 **응답 (200 OK)**
 ```json
 {
-  "_id": "65a1b2c3d4e5f6g7h8i9j0k1",
+  "id": "uuid-here",
   "title": "게시글 제목",
   "content": "게시글 내용",
-  "author": "작성자",
   "views": 5,
-  "createdAt": "2024-01-15T10:30:00.000Z",
-  "updatedAt": "2024-01-15T10:30:00.000Z"
+  "createdAt": "2025-01-18T10:30:00.000Z",
+  "author": {
+    "id": "user-uuid",
+    "username": "홍길동",
+    "email": "user@example.com"
+  }
 }
 ```
 
@@ -361,50 +540,29 @@ GET /posts/:id
 POST /posts/:id/views
 ```
 
-**응답 (200 OK)**
-```json
-{
-  "_id": "65a1b2c3d4e5f6g7h8i9j0k1",
-  "title": "게시글 제목",
-  "content": "게시글 내용",
-  "author": "작성자",
-  "views": 6,
-  "createdAt": "2024-01-15T10:30:00.000Z",
-  "updatedAt": "2024-01-15T10:30:00.000Z"
-}
-```
-
-#### 5. 게시글 수정
+#### 5. 게시글 수정 🔐
 ```http
 PATCH /posts/:id
+Authorization: Bearer <access_token>
 Content-Type: application/json
 
 {
   "title": "수정된 제목",
-  "content": "수정된 내용",
-  "author": "수정된 작성자"
+  "content": "수정된 내용"
 }
 ```
 
-**응답 (200 OK)**
-```json
-{
-  "_id": "65a1b2c3d4e5f6g7h8i9j0k1",
-  "title": "수정된 제목",
-  "content": "수정된 내용",
-  "author": "수정된 작성자",
-  "views": 5,
-  "createdAt": "2024-01-15T10:30:00.000Z",
-  "updatedAt": "2024-01-15T12:00:00.000Z"
-}
-```
+**권한**: 작성자만 수정 가능
 
-#### 6. 게시글 삭제
+#### 6. 게시글 삭제 🔐
 ```http
 DELETE /posts/:id
+Authorization: Bearer <access_token>
 ```
 
 **응답 (204 No Content)**
+
+**권한**: 작성자만 삭제 가능
 
 ---
 
@@ -414,50 +572,70 @@ DELETE /posts/:id
 board-project/
 ├── backend/                      # NestJS 백엔드
 │   ├── src/
-│   │   ├── posts/                # Posts 모듈
-│   │   │   ├── dto/              # Data Transfer Objects
+│   │   ├── auth/                 # 인증 모듈
+│   │   │   ├── decorators/       # 커스텀 데코레이터
+│   │   │   │   └── current-user.decorator.ts
+│   │   │   ├── dto/
+│   │   │   │   └── login.dto.ts
+│   │   │   ├── guards/           # 인증 가드
+│   │   │   │   ├── jwt-auth.guard.ts
+│   │   │   │   └── local-auth.guard.ts
+│   │   │   ├── strategies/       # Passport 전략
+│   │   │   │   ├── jwt.strategy.ts
+│   │   │   │   └── local.strategy.ts
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.service.ts
+│   │   │   └── auth.module.ts
+│   │   ├── users/                # 사용자 모듈
+│   │   │   ├── dto/
+│   │   │   │   └── create-user.dto.ts
+│   │   │   ├── entities/
+│   │   │   │   └── user.entity.ts
+│   │   │   ├── users.controller.ts
+│   │   │   ├── users.service.ts
+│   │   │   └── users.module.ts
+│   │   ├── posts/                # 게시글 모듈
+│   │   │   ├── dto/
 │   │   │   │   ├── create-post.dto.ts
 │   │   │   │   └── update-post.dto.ts
-│   │   │   ├── entities/         # 엔티티 정의
-│   │   │   │   └── post.entity.ts
-│   │   │   ├── posts.controller.ts  # REST API 컨트롤러
-│   │   │   ├── posts.service.ts     # 비즈니스 로직
-│   │   │   └── posts.module.ts      # 모듈 정의
-│   │   ├── app.module.ts         # 루트 모듈
-│   │   ├── app.controller.ts     # 앱 컨트롤러
-│   │   ├── app.service.ts        # 앱 서비스
-│   │   └── main.ts               # 진입점
-│   ├── test/                     # E2E 테스트
+│   │   │   ├── entities/
+│   │   │   │   └── post.entity.ts  # TypeORM Entity
+│   │   │   ├── posts.controller.ts
+│   │   │   ├── posts.service.ts    # N+1 방지 로직
+│   │   │   └── posts.module.ts
+│   │   ├── app.module.ts         # TypeORM 설정
+│   │   ├── app.controller.ts
+│   │   ├── app.service.ts
+│   │   └── main.ts               # CORS, Validation Pipe
 │   ├── .env                      # 환경 변수
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── nest-cli.json
+│   ├── .env.example              # 환경 변수 템플릿
+│   └── package.json
 │
 ├── frontend/                     # Next.js 프론트엔드
 │   ├── src/
 │   │   ├── app/                  # App Router
+│   │   │   ├── auth/             # 인증 페이지
+│   │   │   │   ├── login/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── signup/
+│   │   │   │       └── page.tsx
 │   │   │   ├── posts/            # 게시글 페이지
-│   │   │   │   ├── [id]/         # 동적 라우팅
-│   │   │   │   │   ├── page.tsx  # 게시글 상세
-│   │   │   │   │   └── edit/
-│   │   │   │   │       └── page.tsx  # 게시글 수정
+│   │   │   │   ├── [id]/
+│   │   │   │   │   └── page.tsx  # 상세 조회
 │   │   │   │   ├── new/
-│   │   │   │   │   └── page.tsx  # 게시글 작성
-│   │   │   │   └── page.tsx      # 게시글 목록
-│   │   │   ├── layout.tsx        # 루트 레이아웃
-│   │   │   └── page.tsx          # 홈 페이지
-│   │   └── types/                # TypeScript 타입 정의
+│   │   │   │   │   └── page.tsx  # 작성 (인증 필요)
+│   │   │   │   └── page.tsx      # 목록
+│   │   │   ├── layout.tsx        # AuthProvider 래핑
+│   │   │   └── page.tsx          # 홈
+│   │   ├── contexts/             # React Context
+│   │   │   └── AuthContext.tsx   # 인증 상태 관리
+│   │   └── types/
 │   │       └── post.ts
-│   ├── public/                   # 정적 파일
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── next.config.ts
-│   ├── tailwind.config.ts
-│   └── postcss.config.mjs
+│   └── package.json
 │
-├── docker-compose.yml            # Docker Compose 설정
-├── .gitignore                    # Git 제외 파일
-└── README.md                     # 프로젝트 문서
+├── docker-compose.yml            # PostgreSQL, Redis, MongoDB
+├── .gitignore
+└── README.md
 ```
 
 ---
@@ -467,22 +645,23 @@ board-project/
 ### Backend (.env)
 
 ```env
-# MongoDB 연결 URI
-MONGODB_URI=mongodb://admin:admin123@localhost:27017/board?authSource=admin
+# PostgreSQL Database
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=admin
+DATABASE_PASSWORD=admin123
+DATABASE_NAME=board
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_EXPIRATION=7d
 ```
 
-### Frontend
-
-프론트엔드는 현재 하드코딩된 API URL을 사용합니다:
-```typescript
-const API_URL = 'http://localhost:3000';
-```
-
-프로덕션 환경에서는 환경 변수로 변경하는 것을 권장합니다:
+### Frontend (.env.local)
 
 ```env
-# .env.local
-NEXT_PUBLIC_API_URL=http://localhost:3000
+# API Base URL
+NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
 ---
@@ -491,23 +670,17 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 
 ### 백엔드 개발
 
-#### 새로운 모듈 추가
+#### TypeORM 마이그레이션 생성
 ```bash
 cd backend
-nest generate module <module-name>
-nest generate controller <module-name>
-nest generate service <module-name>
+npm run typeorm migration:generate -- -n MigrationName
+npm run typeorm migration:run
 ```
 
 #### 테스트 실행
 ```bash
-# 단위 테스트
 npm test
-
-# E2E 테스트
 npm run test:e2e
-
-# 커버리지
 npm run test:cov
 ```
 
@@ -517,22 +690,14 @@ npm run build
 npm run start:prod
 ```
 
+**중요**: 프로덕션에서는 `synchronize: false`로 설정하고 마이그레이션을 사용하세요.
+
 ### 프론트엔드 개발
 
 #### 새로운 페이지 추가
 ```bash
-# src/app 내에 새 디렉토리 생성
 mkdir -p src/app/new-page
 touch src/app/new-page/page.tsx
-```
-
-#### 타입 정의 추가
-```typescript
-// src/types/example.ts
-export interface Example {
-  id: string;
-  name: string;
-}
 ```
 
 #### 프로덕션 빌드
@@ -541,74 +706,37 @@ npm run build
 npm start
 ```
 
-### 코드 품질
-
-#### Linting
-```bash
-# 백엔드
-cd backend
-npm run lint
-
-# 프론트엔드
-cd frontend
-npm run lint
-```
-
-#### 포맷팅
-```bash
-cd backend
-npm run format
-```
-
 ---
 
 ## 🐛 문제 해결
 
-### MongoDB 연결 오류
+### PostgreSQL 연결 오류
 ```
-Error: connect ECONNREFUSED 127.0.0.1:27017
-```
-
-**해결 방법:**
-1. Docker Compose가 실행 중인지 확인
-   ```bash
-   docker-compose ps
-   ```
-2. MongoDB 컨테이너 재시작
-   ```bash
-   docker-compose restart mongodb
-   ```
-
-### 포트 충돌
-```
-Error: listen EADDRINUSE: address already in use :::3000
+Error: connect ECONNREFUSED 127.0.0.1:5432
 ```
 
 **해결 방법:**
-1. 사용 중인 프로세스 종료
-   ```bash
-   # macOS/Linux
-   lsof -ti:3000 | xargs kill -9
+```bash
+docker-compose ps
+docker-compose restart postgres
+docker logs board-postgres
+```
 
-   # Windows
-   netstat -ano | findstr :3000
-   taskkill /PID <PID> /F
-   ```
-2. 또는 다른 포트 사용
-   ```bash
-   # main.ts 또는 next.config.ts에서 포트 변경
-   ```
+### JWT 토큰 만료
+```
+401 Unauthorized
+```
+
+**해결 방법:**
+1. 로그아웃 후 다시 로그인
+2. `.env`의 `JWT_EXPIRATION` 값 확인
 
 ### CORS 오류
-```
-Access to fetch at 'http://localhost:3000/posts' from origin 'http://localhost:3001' has been blocked by CORS policy
-```
 
-**해결 방법:**
-백엔드 `main.ts`에 CORS 설정이 올바른지 확인:
+`main.ts`에서 CORS 설정 확인:
 ```typescript
 app.enableCors({
-  origin: 'http://localhost:3001',
+  origin: 'http://localhost:3000',
   credentials: true,
 });
 ```
@@ -617,16 +745,19 @@ app.enableCors({
 
 ## 📈 향후 개선 사항
 
-- [ ] 사용자 인증 및 권한 관리 (JWT)
-- [ ] Redis를 활용한 캐싱 구현
-- [ ] 댓글 기능 추가
-- [ ] 파일 업로드 (이미지, 첨부파일)
+- [x] JWT 기반 인증 시스템
+- [x] PostgreSQL + TypeORM 마이그레이션
+- [x] N+1 쿼리 방지
+- [ ] 카카오 OAuth2 로그인
+- [ ] Redis를 활용한 캐싱
+- [ ] 댓글 기능
+- [ ] 파일 업로드 (이미지)
 - [ ] 실시간 알림 (WebSocket)
-- [ ] 좋아요/싫어요 기능
-- [ ] 게시글 카테고리 분류
+- [ ] 좋아요 기능
+- [ ] 게시글 카테고리
 - [ ] 관리자 대시보드
-- [ ] E2E 테스트 작성
-- [ ] CI/CD 파이프라인 구축
+- [ ] E2E 테스트
+- [ ] CI/CD 파이프라인
 
 ---
 

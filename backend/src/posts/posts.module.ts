@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
-import { Post, PostSchema } from './entities/post.entity';
+import { Post } from './entities/post.entity';
 
+/**
+ * PostsModule - 게시글 모듈
+ * Mongoose에서 TypeORM으로 마이그레이션
+ */
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }])
+    TypeOrmModule.forFeature([Post]), // TypeORM Repository 등록
   ],
   controllers: [PostsController],
   providers: [PostsService],

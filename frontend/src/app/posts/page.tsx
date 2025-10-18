@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Post } from '@/types/post';
+import { useAuth } from '@/contexts/AuthContext';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface PostsResponse {
   posts: Post[];
@@ -40,6 +41,7 @@ function formatDate(dateString: string): string {
 }
 
 export default function PostsPage() {
+  const { user, logout } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -166,12 +168,45 @@ export default function PostsPage() {
             </div>
           </form>
 
-          <Link
-            href="/posts/new"
-            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
-          >
-            작성
-          </Link>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {user.username[0].toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">{user.username}</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                >
+                  로그아웃
+                </button>
+                <Link
+                  href="/posts/new"
+                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
+                >
+                  작성
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-full font-semibold hover:bg-gray-50 transition-all"
+                >
+                  로그인
+                </Link>
+                <Link
+                  href="/auth/signup"
+                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
+                >
+                  회원가입
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
