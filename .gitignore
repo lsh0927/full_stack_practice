@@ -62,3 +62,4 @@ dev-debug.log
 # MCP and Claude Code configuration
 .mcp.json
 CLAUDE.md
+backend/uploads/

@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 
 /**
  * CreateUserDto - 회원가입 요청 DTO
@@ -15,4 +15,8 @@ export class CreateUserDto {
   @IsString()
   @MinLength(2)
   username: string;
+
+  @IsOptional()
+  @IsString()
+  profileImage?: string;
 }

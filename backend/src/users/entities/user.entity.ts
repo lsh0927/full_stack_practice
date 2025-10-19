@@ -68,6 +68,13 @@ export class User {
   profileImage: string;
 
   /**
+   * 자기소개
+   * - 사용자의 프로필 소개글
+   */
+  @Column({ nullable: true, length: 500 })
+  bio: string;
+
+  /**
    * User와 Post의 1:N 관계
    * - OneToMany: 한 명의 User가 여러 Post를 작성
    * - cascade: ['insert', 'update'] - User 저장 시 Post도 함께 저장

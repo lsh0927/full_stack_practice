@@ -1,9 +1,16 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 /**
  * UsersService - 사용자 관리 서비스
@@ -74,6 +81,28 @@ export class UsersService {
   }
 
   /**
+   * ID로 사용자 찾기 + 게시글 수 포함
+   * - 프로필 조회 시 사용
+   */
+  async findByIdWithPostCount(id: string) {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.posts', 'post')
+      .where('user.id = :id', { id })
+      .getOne();
+
+    if (!user) {
+      return null;
+    }
+
+    const { password, posts, ...userInfo } = user as any;
+    return {
+      ...userInfo,
+      postCount: posts?.length || 0,
+    };
+  }
+
+  /**
    * OAuth 사용자 찾기 또는 생성
    * - Kakao 로그인 시 사용
    */
@@ -102,6 +131,111 @@ export class UsersService {
 
       user = await this.userRepository.save(user);
     }
+
+    return user;
+  }
+
+  /**
+   * 프로필 업데이트
+   * - username, email, bio 수정
+   * - 중복 검증
+   */
+  async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new BadRequestException('사용자를 찾을 수 없습니다.');
+    }
+
+    // email 중복 검증
+    if (updateProfileDto.email && updateProfileDto.email !== user.email) {
+      const existingEmail = await this.userRepository.findOne({
+        where: { email: updateProfileDto.email },
+      });
+      if (existingEmail) {
+        throw new ConflictException('이미 사용 중인 이메일입니다.');
+      }
+    }
+
+    // username 중복 검증
+    if (
+      updateProfileDto.username &&
+      updateProfileDto.username !== user.username
+    ) {
+      const existingUsername = await this.userRepository.findOne({
+        where: { username: updateProfileDto.username },
+      });
+      if (existingUsername) {
+        throw new ConflictException('이미 사용 중인 사용자명입니다.');
+      }
+    }
+
+    // 업데이트
+    Object.assign(user, updateProfileDto);
+    const updatedUser = await this.userRepository.save(user);
+
+    // 비밀번호 제외하고 반환
+    const { password, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  }
+
+  /**
+   * 비밀번호 변경
+   * - 현재 비밀번호 확인
+   * - 새 비밀번호 해싱 후 저장
+   */
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.id = :id', { id: userId })
+      .addSelect('user.password')
+      .getOne();
+
+    if (!user) {
+      throw new BadRequestException('사용자를 찾을 수 없습니다.');
+    }
+
+    // OAuth 사용자는 비밀번호가 없음
+    if (!user.password) {
+      throw new BadRequestException(
+        'OAuth 로그인 사용자는 비밀번호를 변경할 수 없습니다.',
+      );
+    }
+
+    // 현재 비밀번호 확인
+    const isPasswordValid = await bcrypt.compare(
+      changePasswordDto.currentPassword,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('현재 비밀번호가 일치하지 않습니다.');
+    }
+
+    // 새 비밀번호 해싱
+    const hashedPassword = await bcrypt.hash(
+      changePasswordDto.newPassword,
+      10,
+    );
+
+    // 비밀번호 업데이트
+    user.password = hashedPassword;
+    await this.userRepository.save(user);
+  }
+
+  /**
+   * 프로필 이미지 업데이트
+   * - 프로필 이미지 URL 저장
+   */
+  async updateProfileImage(userId: string, imageUrl: string) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new BadRequestException('사용자를 찾을 수 없습니다.');
+    }
+
+    user.profileImage = imageUrl;
+    await this.userRepository.save(user);
 
     return user;
   }

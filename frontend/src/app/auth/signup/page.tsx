@@ -5,15 +5,35 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string>('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
   const router = useRouter();
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('이미지 크기는 5MB 이하여야 합니다.');
+        return;
+      }
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +53,50 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      await signup(email, password, username);
-      router.push('/posts');
+      // FormData 생성하여 multipart/form-data로 전송
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('username', username);
+
+      // 프로필 이미지가 있으면 추가
+      if (profileImage) {
+        formData.append('profileImage', profileImage);
+      }
+
+      // 회원가입 요청 (multipart/form-data로 전송)
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: 'POST',
+        body: formData, // FormData를 직접 전송 (Content-Type 자동 설정됨)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || '회원가입에 실패했습니다.');
+      }
+
+      const data = await response.json();
+
+      // 토큰 저장
+      if (data.access_token) {
+        // localStorage에 저장
+        localStorage.setItem('token', data.access_token);
+        if (data.refresh_token) {
+          localStorage.setItem('refreshToken', data.refresh_token);
+        }
+
+        // AuthContext 사용하여 로그인 처리
+        const event = new CustomEvent('auth:login', {
+          detail: {
+            token: data.access_token,
+            refreshToken: data.refresh_token,
+            user: data.user
+          },
+        });
+        window.dispatchEvent(event);
+
+        router.push('/posts');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '회원가입에 실패했습니다.');
     } finally {
@@ -77,6 +139,35 @@ export default function SignupPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* 프로필 이미지 업로드 */}
+            <div className="flex flex-col items-center">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                프로필 사진 (선택)
+              </label>
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
+                  {profileImagePreview ? (
+                    <img
+                      src={profileImagePreview}
+                      alt="프로필 미리보기"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-2">클릭하여 이미지 선택 (최대 5MB)</p>
+            </div>
+
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                 사용자 이름

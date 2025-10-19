@@ -26,7 +26,7 @@ export default function PostDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { token } = useAuth();
+  const { user, token } = useAuth(); // user 추가
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -69,6 +69,12 @@ export default function PostDetailPage({
   }, [id]);
 
   const handleDelete = async () => {
+    // 권한 검증: 본인의 게시물이 아닌 경우
+    if (post && user && post.author && post.author.id !== user.id) {
+      alert('접근 권한이 없습니다');
+      return;
+    }
+
     if (!confirm('정말 삭제하시겠습니까?')) {
       return;
     }

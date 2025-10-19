@@ -15,11 +15,12 @@ export default function EditPostPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     content: '',
   });
+  const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -36,6 +37,15 @@ export default function EditPostPage({
         }
 
         const post: Post = await response.json();
+        setPost(post);
+
+        // 권한 검증: 본인의 게시물이 아닌 경우
+        if (user && post.author && post.author.id !== user.id) {
+          alert('접근 권한이 없습니다');
+          router.push(`/posts/${id}`);
+          return;
+        }
+
         setFormData({
           title: post.title,
           content: post.content,
@@ -48,7 +58,7 @@ export default function EditPostPage({
     }
 
     fetchPost();
-  }, [id]);
+  }, [id, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,7 +169,7 @@ export default function EditPostPage({
                 setFormData({ ...formData, title: e.target.value })
               }
               placeholder="제목을 입력하세요"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
               required
             />
           </div>
@@ -176,7 +186,7 @@ export default function EditPostPage({
               }
               placeholder="내용을 입력하세요"
               rows={12}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition-all text-gray-900"
               required
             />
           </div>

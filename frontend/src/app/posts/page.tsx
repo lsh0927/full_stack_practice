@@ -67,7 +67,7 @@ export default function PostsPage() {
         }
 
         const response = await fetch(`${API_URL}/posts?${params}`, {
-          cache: 'no-store',
+          next: { revalidate: 10 }, // 10초마다 재검증 (ISR)
         });
 
         if (!response.ok) {
@@ -171,12 +171,23 @@ export default function PostsPage() {
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {user.username[0].toUpperCase()}
-                  </div>
+                <Link
+                  href={`/profile/${user.id}`}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  {user.profileImage ? (
+                    <img
+                      src={`${API_URL}${user.profileImage}`}
+                      alt={user.username}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {user.username[0].toUpperCase()}
+                    </div>
+                  )}
                   <span className="text-sm font-medium text-gray-700">{user.username}</span>
-                </div>
+                </Link>
                 <button
                   onClick={logout}
                   className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"

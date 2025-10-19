@@ -117,6 +117,12 @@ export class PostsService {
   ): Promise<Post> {
     const post = await this.findOne(id);
 
+    // 디버깅: 비교 값 출력
+    console.log('=== 게시글 수정 권한 검증 ===');
+    console.log('post.authorId:', post.authorId, 'type:', typeof post.authorId);
+    console.log('userId:', userId, 'type:', typeof userId);
+    console.log('비교 결과:', post.authorId === userId);
+
     // 권한 확인: 작성자만 수정 가능
     if (post.authorId !== userId) {
       throw new ForbiddenException('게시글을 수정할 권한이 없습니다.');

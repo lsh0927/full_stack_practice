@@ -20,12 +20,15 @@ export default function HomePage() {
               <>
                 {user ? (
                   <>
-                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full">
+                    <Link
+                      href={`/profile/${user.id}`}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"
+                    >
                       <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
                         {user.username?.[0]?.toUpperCase() || 'U'}
                       </div>
                       <span className="text-sm font-medium text-gray-700">{user.username}</span>
-                    </div>
+                    </Link>
                     <button
                       onClick={logout}
                       className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"

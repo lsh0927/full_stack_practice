@@ -6,7 +6,14 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import * as path from 'path';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -34,7 +41,39 @@ export class AuthController {
    */
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
-  async signup(@Body() createUserDto: CreateUserDto) {
+  @UseInterceptors(
+    FileInterceptor('profileImage', {
+      storage: diskStorage({
+        destination: './uploads/profiles',
+        filename: (req, file, cb) => {
+          const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
+          cb(null, uniqueName);
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        // 이미지 파일만 허용
+        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+          return cb(
+            new BadRequestException('이미지 파일만 업로드 가능합니다.'),
+            false,
+          );
+        }
+        cb(null, true);
+      },
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+      },
+    }),
+  )
+  async signup(
+    @Body() createUserDto: CreateUserDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    // 파일이 업로드된 경우 경로 추가
+    if (file) {
+      createUserDto.profileImage = `/uploads/profiles/${file.filename}`;
+    }
+
     const user = await this.usersService.create(createUserDto);
     return this.authService.login(user);
   }
