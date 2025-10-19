@@ -25,10 +25,20 @@ export default function EditPostPage({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // 로그인 체크
+  useEffect(() => {
+    if (!user || !token) {
+      router.push('/auth/login');
+    }
+  }, [user, token, router]);
+
   useEffect(() => {
     async function fetchPost() {
       try {
         const response = await fetch(`${API_URL}/posts/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
           cache: 'no-store',
         });
 
@@ -58,7 +68,7 @@ export default function EditPostPage({
     }
 
     fetchPost();
-  }, [id, user, router]);
+  }, [id, user, router, token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -43,8 +43,8 @@ export class UsersController {
       throw new NotFoundException('사용자를 찾을 수 없습니다.');
     }
 
-    // 본인 여부 확인
-    const isOwnProfile = req.user.userId === id;
+    // 본인 여부 확인 (req.user는 User 객체이므로 req.user.id 사용)
+    const isOwnProfile = req.user.id === id;
 
     return {
       ...user,
@@ -64,7 +64,7 @@ export class UsersController {
     @Request() req,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
 
     try {
       const updatedUser =
@@ -86,7 +86,7 @@ export class UsersController {
     @Request() req,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    const userId = req.user.userId;
+    const userId = req.user.id;
 
     try {
       await this.usersService.changePassword(userId, changePasswordDto);
@@ -136,7 +136,7 @@ export class UsersController {
       throw new BadRequestException('파일이 없습니다.');
     }
 
-    const userId = req.user.userId;
+    const userId = req.user.id;
     const imageUrl = `/uploads/profiles/${file.filename}`;
 
     await this.usersService.updateProfileImage(userId, imageUrl);

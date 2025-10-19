@@ -15,6 +15,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, username: string, profileImage?: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updatedUser: Partial<User>) => void;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -194,6 +196,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // 사용자 정보 수동 업데이트 (프로필 수정 시 사용)
+  const updateUser = (updatedUser: Partial<User>) => {
+    setUser(prev => prev ? { ...prev, ...updatedUser } : null);
+  };
+
+  // 서버에서 최신 사용자 정보 가져오기
+  const refreshUser = async () => {
+    if (!token) return;
+    await fetchUserProfile(token, true);
+  };
+
   // 앱 시작 시 localStorage에서 토큰 복원 (SSR 대응)
   useEffect(() => {
     // 클라이언트에서만 실행 (localStorage는 브라우저에서만 사용 가능)
@@ -223,6 +236,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         signup,
         logout,
+        updateUser,
+        refreshUser,
         isAuthenticated: !!user,
         isLoading,
       }}

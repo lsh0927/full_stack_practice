@@ -32,10 +32,20 @@ export default function PostDetailPage({
   const [error, setError] = useState('');
   const viewCountedRef = useRef(false);
 
+  // 로그인 체크
+  useEffect(() => {
+    if (!user || !token) {
+      router.push('/auth/login');
+    }
+  }, [user, token, router]);
+
   useEffect(() => {
     async function fetchPost() {
       try {
         const response = await fetch(`${API_URL}/posts/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
           cache: 'no-store',
         });
 
@@ -66,7 +76,7 @@ export default function PostDetailPage({
     }
 
     fetchPost();
-  }, [id]);
+  }, [id, token]);
 
   const handleDelete = async () => {
     // 권한 검증: 본인의 게시물이 아닌 경우
@@ -156,9 +166,17 @@ export default function PostDetailPage({
           {/* Post Header */}
           <div className="p-6 border-b border-gray-100">
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                {post.author?.username?.[0]?.toUpperCase() || '?'}
-              </div>
+              {post.author?.profileImage ? (
+                <img
+                  src={`${API_URL}${post.author.profileImage}`}
+                  alt={post.author.username}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  {post.author?.username?.[0]?.toUpperCase() || '?'}
+                </div>
+              )}
               <div className="ml-3 flex-1">
                 <p className="font-semibold text-gray-900">{post.author?.username || '알 수 없음'}</p>
                 <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
@@ -186,20 +204,27 @@ export default function PostDetailPage({
 
           {/* Post Footer */}
           <div className="p-6 bg-gray-50 border-t border-gray-100">
-            <div className="flex gap-3 justify-end">
-              <Link
-                href={`/posts/${post.id}/edit`}
-                className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors"
-              >
-                수정
-              </Link>
-              <button
-                onClick={handleDelete}
-                className="px-6 py-2.5 bg-red-50 border border-red-200 text-red-600 rounded-full font-medium hover:bg-red-100 transition-colors"
-              >
-                삭제
-              </button>
-            </div>
+            {/* 본인의 게시글일 때만 수정/삭제 버튼 표시 */}
+            {user && post.author && post.author.id === user.id ? (
+              <div className="flex gap-3 justify-end">
+                <Link
+                  href={`/posts/${post.id}/edit`}
+                  className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors"
+                >
+                  수정
+                </Link>
+                <button
+                  onClick={handleDelete}
+                  className="px-6 py-2.5 bg-red-50 border border-red-200 text-red-600 rounded-full font-medium hover:bg-red-100 transition-colors"
+                >
+                  삭제
+                </button>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 text-sm">
+                이 게시글의 작성자만 수정/삭제할 수 있습니다.
+              </div>
+            )}
           </div>
         </article>
 

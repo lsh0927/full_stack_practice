@@ -9,7 +9,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, refreshUser } = useAuth();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [bio, setBio] = useState('');
@@ -93,6 +93,9 @@ export default function EditProfilePage() {
           throw new Error('이미지 업로드에 실패했습니다.');
         }
       }
+
+      // AuthContext의 사용자 정보 갱신
+      await refreshUser();
 
       setMessage('프로필이 성공적으로 업데이트되었습니다.');
       setTimeout(() => {

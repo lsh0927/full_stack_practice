@@ -25,7 +25,7 @@ import { User } from '../users/entities/user.entity';
  * Spring의 @RestController와 유사
  *
  * 인증 정책:
- * - 목록 조회, 상세 조회: 인증 불필요 (공개)
+ * - 목록 조회, 상세 조회: JWT 인증 필수 (로그인한 사용자만 조회 가능)
  * - 생성, 수정, 삭제: JWT 인증 필수
  * - 조회수 증가: 인증 불필요 (누구나 조회 가능)
  */
@@ -47,8 +47,9 @@ export class PostsController {
 
   /**
    * 게시글 목록 조회
-   * - 인증 불필요 (공개)
+   * - JWT 인증 필수 (로그인한 사용자만 조회 가능)
    */
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -60,8 +61,9 @@ export class PostsController {
 
   /**
    * 게시글 상세 조회
-   * - 인증 불필요 (공개)
+   * - JWT 인증 필수 (로그인한 사용자만 조회 가능)
    */
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.postsService.findOne(id);

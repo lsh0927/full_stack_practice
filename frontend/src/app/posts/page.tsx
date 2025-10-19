@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Post } from '@/types/post';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -41,7 +42,8 @@ function formatDate(dateString: string): string {
 }
 
 export default function PostsPage() {
-  const { user, logout } = useAuth();
+  const router = useRouter();
+  const { user, token, logout } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -50,6 +52,13 @@ export default function PostsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // 로그인 체크
+  useEffect(() => {
+    if (!user || !token) {
+      router.push('/auth/login');
+    }
+  }, [user, token, router]);
 
   useEffect(() => {
     async function fetchPosts() {
@@ -67,7 +76,10 @@ export default function PostsPage() {
         }
 
         const response = await fetch(`${API_URL}/posts?${params}`, {
-          next: { revalidate: 10 }, // 10초마다 재검증 (ISR)
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          cache: 'no-store',
         });
 
         if (!response.ok) {
@@ -86,7 +98,7 @@ export default function PostsPage() {
     }
 
     fetchPosts();
-  }, [currentPage, searchQuery]);
+  }, [currentPage, searchQuery, token]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,9 +274,17 @@ export default function PostsPage() {
                 <div className="p-6">
                   {/* Post Header */}
                   <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-                      {post.author?.username?.[0]?.toUpperCase() || '?'}
-                    </div>
+                    {post.author?.profileImage ? (
+                      <img
+                        src={`${API_URL}${post.author.profileImage}`}
+                        alt={post.author.username}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
+                        {post.author?.username?.[0]?.toUpperCase() || '?'}
+                      </div>
+                    )}
                     <div className="ml-3 flex-1">
                       <p className="font-semibold text-gray-900">{post.author?.username || '알 수 없음'}</p>
                       <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
