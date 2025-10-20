@@ -48,6 +48,7 @@ export class PostsController {
   /**
    * 게시글 목록 조회
    * - JWT 인증 필수 (로그인한 사용자만 조회 가능)
+   * - 차단한 사용자의 게시글 숨김 처리
    */
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -55,8 +56,9 @@ export class PostsController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
+    @CurrentUser() user?: User,
   ) {
-    return this.postsService.findAll(page, limit, search);
+    return this.postsService.findAll(page, limit, search, user?.id);
   }
 
   /**

@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
 import { Post } from './entities/post.entity';
+import { BlocksModule } from '../blocks/blocks.module';
 
 /**
  * PostsModule - 게시글 모듈
@@ -11,6 +12,7 @@ import { Post } from './entities/post.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Post]), // TypeORM Repository 등록
+    BlocksModule, // 차단 기능 사용
   ],
   controllers: [PostsController],
   providers: [PostsService],

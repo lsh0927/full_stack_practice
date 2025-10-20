@@ -8,6 +8,7 @@ import { Repository, IsNull } from 'typeorm';
 import { Comment } from './entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { BlocksService } from '../blocks/blocks.service';
 
 /**
  * CommentsService - 댓글 관리 서비스
@@ -17,6 +18,7 @@ export class CommentsService {
   constructor(
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
+    private readonly blocksService: BlocksService,
   ) {}
 
   /**
@@ -42,9 +44,11 @@ export class CommentsService {
    * 게시글의 댓글 목록 조회
    * - 대댓글도 함께 조회 (계층 구조)
    * - N+1 문제 방지: leftJoinAndSelect 사용
+   * - 차단 필터링: 차단한 사용자의 댓글 숨김
    */
-  async findByPost(postId: string): Promise<Comment[]> {
-    return this.commentRepository.find({
+  async findByPost(postId: string, userId?: string): Promise<Comment[]> {
+    // 전체 댓글 조회 (차단 필터링 전)
+    const comments = await this.commentRepository.find({
       where: { postId, parentId: IsNull() }, // 최상위 댓글만 조회
       relations: ['author', 'replies', 'replies.author'], // 작성자 및 답글 정보 포함
       order: {
@@ -54,6 +58,33 @@ export class CommentsService {
         },
       },
     });
+
+    // 차단 필터링 (userId가 있는 경우에만 적용)
+    if (userId) {
+      // 내가 차단한 사용자 ID 목록 조회
+      const blockedUserIds = await this.blocksService.getBlockedUserIds(userId);
+      // 나를 차단한 사용자 ID 목록 조회
+      const blockerUserIds = await this.blocksService.getBlockerUserIds(userId);
+
+      // 차단 관계가 있는 모든 사용자 ID
+      const excludedUserIds = [
+        ...new Set([...blockedUserIds, ...blockerUserIds]),
+      ];
+
+      if (excludedUserIds.length > 0) {
+        // 차단한 사용자의 댓글 및 대댓글 필터링
+        return comments
+          .filter((comment) => !excludedUserIds.includes(comment.authorId))
+          .map((comment) => ({
+            ...comment,
+            replies: comment.replies?.filter(
+              (reply) => !excludedUserIds.includes(reply.authorId),
+            ),
+          }));
+      }
+    }
+
+    return comments;
   }
 
   /**

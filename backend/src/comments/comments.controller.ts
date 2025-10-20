@@ -7,12 +7,13 @@ import {
   Body,
   Param,
   UseGuards,
-  Request,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '../users/entities/user.entity';
 
 /**
  * CommentsController - 댓글 관리 컨트롤러
@@ -31,19 +32,22 @@ export class CommentsController {
   async create(
     @Param('postId') postId: string,
     @Body() createCommentDto: CreateCommentDto,
-    @Request() req,
+    @CurrentUser() user: User,
   ) {
-    const userId = req.user.id;
-    return this.commentsService.create(postId, createCommentDto, userId);
+    return this.commentsService.create(postId, createCommentDto, user.id);
   }
 
   /**
    * GET /posts/:postId/comments - 게시글의 댓글 목록 조회
    * - 최상위 댓글과 대댓글 계층 구조로 반환
+   * - 차단한 사용자의 댓글 숨김 처리
    */
   @Get('posts/:postId/comments')
-  async findByPost(@Param('postId') postId: string) {
-    return this.commentsService.findByPost(postId);
+  async findByPost(
+    @Param('postId') postId: string,
+    @CurrentUser() user?: User,
+  ) {
+    return this.commentsService.findByPost(postId, user?.id);
   }
 
   /**
@@ -63,10 +67,9 @@ export class CommentsController {
   async update(
     @Param('id') id: string,
     @Body() updateCommentDto: UpdateCommentDto,
-    @Request() req,
+    @CurrentUser() user: User,
   ) {
-    const userId = req.user.id;
-    return this.commentsService.update(id, updateCommentDto, userId);
+    return this.commentsService.update(id, updateCommentDto, user.id);
   }
 
   /**
@@ -75,9 +78,8 @@ export class CommentsController {
    * - CASCADE로 대댓글도 함께 삭제
    */
   @Delete('comments/:id')
-  async remove(@Param('id') id: string, @Request() req) {
-    const userId = req.user.id;
-    await this.commentsService.remove(id, userId);
+  async remove(@Param('id') id: string, @CurrentUser() user: User) {
+    await this.commentsService.remove(id, user.id);
     return { message: '댓글이 삭제되었습니다.' };
   }
 }

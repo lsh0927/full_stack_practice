@@ -31,6 +31,7 @@ export default function PostDetailPage({
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isBlocking, setIsBlocking] = useState(false);
   const viewCountedRef = useRef(false);
 
   // 로그인 체크
@@ -111,6 +112,38 @@ export default function PostDetailPage({
       router.push('/posts');
     } catch (err) {
       alert('삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleBlockUser = async () => {
+    if (!token || !post?.author?.id) return;
+
+    const confirmed = window.confirm(
+      `정말로 ${post.author.username}님을 차단하시겠습니까?\n\n차단하면:\n- 이 사용자의 게시글과 댓글이 보이지 않습니다.\n- 이 사용자도 회원님의 게시글과 댓글을 볼 수 없습니다.`
+    );
+
+    if (!confirmed) return;
+
+    setIsBlocking(true);
+
+    try {
+      const response = await fetch(`${API_URL}/blocks/${post.author.id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || '차단에 실패했습니다');
+      }
+
+      alert('사용자를 차단했습니다.');
+      router.push('/posts'); // 게시글 목록으로 이동
+    } catch (err: any) {
+      alert(err.message || '차단 중 오류가 발생했습니다');
+      setIsBlocking(false);
     }
   };
 
@@ -222,8 +255,14 @@ export default function PostDetailPage({
                 </button>
               </div>
             ) : (
-              <div className="text-center text-gray-500 text-sm">
-                이 게시글의 작성자만 수정/삭제할 수 있습니다.
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleBlockUser}
+                  disabled={isBlocking}
+                  className="px-6 py-2.5 bg-red-600 text-white rounded-full font-medium hover:bg-red-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isBlocking ? '차단 중...' : '사용자 차단'}
+                </button>
               </div>
             )}
           </div>

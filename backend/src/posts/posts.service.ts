@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, Not, In } from 'typeorm';
 import { Post } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { BlocksService } from '../blocks/blocks.service';
 
 /**
  * PostsService - TypeORM 기반 게시글 관리 서비스
@@ -14,6 +15,7 @@ export class PostsService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
+    private readonly blocksService: BlocksService,
   ) {}
 
   /**
@@ -31,24 +33,34 @@ export class PostsService {
   }
 
   /**
-   * 게시글 목록 조회 (페이지네이션 + 검색)
+   * 게시글 목록 조회 (페이지네이션 + 검색 + 차단 필터링)
    *
    * N+1 문제 해결:
    * - leftJoinAndSelect로 author 정보를 한 번의 JOIN 쿼리로 조회
    * - Lazy Loading 대신 Eager Loading 사용
    *
+   * 차단 필터링:
+   * - 내가 차단한 사용자의 게시글 숨김
+   * - 나를 차단한 사용자의 게시글 숨김
+   *
    * 실행되는 SQL:
    * SELECT post.*, user.*
    * FROM posts
    * LEFT JOIN users ON posts.authorId = users.id
-   * WHERE (post.title ILIKE '%search%' OR post.content ILIKE '%search%')
+   * WHERE post.authorId NOT IN (blocked_user_ids)
+   * AND (post.title ILIKE '%search%' OR post.content ILIKE '%search%')
    * ORDER BY post.createdAt DESC
    * LIMIT 10 OFFSET 0
    *
    * + COUNT 쿼리 1회
    * = 총 2개의 쿼리로 완료 (N+1 문제 없음)
    */
-  async findAll(page: number = 1, limit: number = 10, search?: string) {
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    userId?: string,
+  ) {
     const skip = (page - 1) * limit;
 
     // QueryBuilder 사용으로 N+1 문제 방지
@@ -59,9 +71,29 @@ export class PostsService {
       .skip(skip)
       .take(limit);
 
+    // 차단 필터링 (userId가 있는 경우에만 적용)
+    if (userId) {
+      // 내가 차단한 사용자 ID 목록 조회
+      const blockedUserIds = await this.blocksService.getBlockedUserIds(userId);
+      // 나를 차단한 사용자 ID 목록 조회
+      const blockerUserIds = await this.blocksService.getBlockerUserIds(userId);
+
+      // 차단 관계가 있는 모든 사용자 ID
+      const excludedUserIds = [
+        ...new Set([...blockedUserIds, ...blockerUserIds]),
+      ];
+
+      // 차단한 사용자의 게시글 제외
+      if (excludedUserIds.length > 0) {
+        queryBuilder.andWhere('post.authorId NOT IN (:...excludedUserIds)', {
+          excludedUserIds,
+        });
+      }
+    }
+
     // 검색 조건 추가
     if (search) {
-      queryBuilder.where(
+      queryBuilder.andWhere(
         '(post.title ILIKE :search OR post.content ILIKE :search)',
         { search: `%${search}%` },
       );
