@@ -78,14 +78,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserProfile = React.useCallback(async (authToken: string, retry = true) => {
     try {
+      console.log('AuthContext: Fetching user profile with token:', authToken.substring(0, 20) + '...');
       const response = await fetch(`${API_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
       });
 
+      console.log('AuthContext: Profile fetch response:', response.status);
+
       if (response.ok) {
         const userData = await response.json();
+        console.log('AuthContext: User profile fetched successfully:', userData);
         setUser(userData);
       } else if (response.status === 401 && retry) {
         // Access Token이 만료됨 - Refresh Token으로 갱신 시도
@@ -217,12 +221,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const storedToken = localStorage.getItem('token');
     const storedRefreshToken = localStorage.getItem('refreshToken');
+    console.log('AuthContext: Checking stored tokens:', {
+      hasToken: !!storedToken,
+      hasRefreshToken: !!storedRefreshToken
+    });
+
     if (storedToken) {
+      console.log('AuthContext: Found stored token, setting state and fetching profile');
       setToken(storedToken);
       setRefreshToken(storedRefreshToken);
       // 토큰으로 사용자 정보 가져오기
       fetchUserProfile(storedToken);
     } else {
+      console.log('AuthContext: No stored token found');
       setIsLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -43,7 +43,7 @@ function formatDate(dateString: string): string {
 
 export default function PostsPage() {
   const router = useRouter();
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, isLoading: authLoading } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -55,13 +55,25 @@ export default function PostsPage() {
 
   // 로그인 체크
   useEffect(() => {
+    // AuthContext가 아직 로딩 중이면 대기
+    if (authLoading) {
+      return;
+    }
+
+    // 로딩이 끝났는데 user나 token이 없으면 로그인 페이지로
     if (!user || !token) {
       router.push('/auth/login');
     }
-  }, [user, token, router]);
+  }, [user, token, router, authLoading]);
 
   useEffect(() => {
     async function fetchPosts() {
+      // 토큰이 없으면 fetch하지 않음
+      if (!token) {
+        console.log('Token not available yet, skipping fetch');
+        return;
+      }
+
       setLoading(true);
       setError('');
 
@@ -75,6 +87,7 @@ export default function PostsPage() {
           params.append('search', searchQuery);
         }
 
+        console.log('Fetching posts with token:', token);
         const response = await fetch(`${API_URL}/posts?${params}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -83,6 +96,7 @@ export default function PostsPage() {
         });
 
         if (!response.ok) {
+          console.error('Posts fetch failed:', response.status, response.statusText);
           throw new Error('게시글을 불러오는데 실패했습니다');
         }
 
@@ -92,6 +106,7 @@ export default function PostsPage() {
         setTotal(data.total);
         setLoading(false);
       } catch (err) {
+        console.error('Error fetching posts:', err);
         setError('게시글을 불러오는 중 오류가 발생했습니다');
         setLoading(false);
       }
@@ -117,7 +132,8 @@ export default function PostsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (loading) {
+  // AuthContext가 아직 로딩 중이거나 posts가 로딩 중일 때
+  if (authLoading || (loading && !error)) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 py-8">
