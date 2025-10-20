@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types/post';
 import { useAuth } from '@/contexts/AuthContext';
+import CommentSection from '@/components/CommentSection';
 
 const API_URL = 'http://localhost:3000';
 
@@ -227,6 +228,9 @@ export default function PostDetailPage({
             )}
           </div>
         </article>
+
+        {/* Comment Section */}
+        <CommentSection postId={id} />
 
         {/* Back to List */}
         <div className="mt-6 text-center">
