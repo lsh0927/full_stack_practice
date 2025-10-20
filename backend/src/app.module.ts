@@ -7,8 +7,10 @@ import { PostsModule } from './posts/posts.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { RedisModule } from './redis/redis.module';
+import { CommentsModule } from './comments/comments.module';
 import { User } from './users/entities/user.entity';
 import { Post } from './posts/entities/post.entity';
+import { Comment } from './comments/entities/comment.entity';
 
 /**
  * AppModule - 루트 모듈
@@ -46,7 +48,7 @@ import { Post } from './posts/entities/post.entity';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [User, Post], // 엔티티 등록
+        entities: [User, Post, Comment], // 엔티티 등록
         synchronize: true, // 개발 환경: true, 프로덕션: false
         logging: true, // SQL 쿼리 로깅 활성화
       }),
@@ -56,6 +58,7 @@ import { Post } from './posts/entities/post.entity';
     UsersModule,
     AuthModule,
     PostsModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -239,4 +239,69 @@ export class UsersService {
 
     return user;
   }
+
+  /**
+   * OAuth 제공자 ID로 사용자 찾기
+   * - KakaoAuthService에서 사용
+   */
+  async findByProviderId(
+    provider: string,
+    providerId: string,
+  ): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { provider, providerId },
+    });
+  }
+
+  /**
+   * 이메일로 사용자 찾기 (비밀번호 제외)
+   * - OAuth 연동 시 기존 사용자 확인용
+   */
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { email },
+    });
+  }
+
+  /**
+   * 카카오 사용자 생성
+   * - 카카오 로그인으로 새로 가입하는 사용자
+   */
+  async createKakaoUser(userData: {
+    email: string;
+    username: string;
+    provider: string;
+    providerId: string;
+    profileImage?: string;
+  }): Promise<User> {
+    const user = this.userRepository.create({
+      ...userData,
+      // password는 null (OAuth 사용자는 비밀번호 없음)
+    });
+
+    const savedUser = await this.userRepository.save(user);
+    const { password, ...userWithoutPassword } = savedUser;
+    return userWithoutPassword as User;
+  }
+
+  /**
+   * 사용자 정보 업데이트
+   * - OAuth 정보 연동 또는 프로필 업데이트
+   */
+  async updateUser(
+    userId: string,
+    updates: Partial<User>,
+  ): Promise<User> {
+    await this.userRepository.update(userId, updates);
+    const updatedUser = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!updatedUser) {
+      throw new BadRequestException('사용자를 찾을 수 없습니다.');
+    }
+
+    const { password, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword as User;
+  }
 }

@@ -249,6 +249,35 @@ export default function SignupPage() {
             </p>
           </div>
 
+          {/* 구분선 */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-gray-500">또는</span>
+            </div>
+          </div>
+
+          {/* 카카오 로그인 버튼 */}
+          <a
+            href="http://localhost:3000/auth/kakao"
+            className="w-full bg-[#FEE500] text-[#000000D9] py-3 px-6 rounded-full font-medium hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-3"
+          >
+            <svg
+              className="w-5 h-5"
+              viewBox="0 0 18 18"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M9 0C4.02943 0 0 3.31929 0 7.40769C0 10.0892 1.43771 12.48 3.69086 14.1415L2.82514 17.5815C2.74629 17.8985 3.096 18.1385 3.37714 17.9631L7.45714 15.5077C7.95429 15.5723 8.47114 15.6092 9 15.6092C13.9706 15.6092 18 12.2892 18 8.20154C18 4.11385 13.9706 0 9 0Z"
+                fill="currentColor"
+              />
+            </svg>
+            <span>카카오로 시작하기</span>
+          </a>
+
           <div className="mt-6 text-center">
             <Link
               href="/posts"

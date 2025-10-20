@@ -49,9 +49,9 @@ export class User {
 
   /**
    * OAuth 제공자 (local, kakao 등)
-   * - nullable: true로 로컬 가입 시 null 허용
+   * - default: 'local'로 일반 가입 시 자동 설정
    */
-  @Column({ nullable: true })
+  @Column({ default: 'local' })
   provider: string;
 
   /**
