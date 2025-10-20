@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
 
   // 성능 최적화 설정
   reactStrictMode: true,
-  swcMinify: true, // SWC 컴파일러 사용으로 빠른 빌드
+  // swcMinify는 Next.js 15에서 기본값이므로 제거
 
   // 이미지 최적화
   images: {
@@ -14,27 +14,11 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
 
-  // 실험적 기능으로 성능 개선
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['@heroicons/react'],
-  },
-
-  // 웹팩 설정 최적화
-  webpack: (config, { dev, isServer }) => {
-    // 개발 모드에서 소스맵 최적화
-    if (dev && !isServer) {
-      config.devtool = 'cheap-module-source-map';
-    }
-
-    // 모듈 리졸빙 최적화
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.join(__dirname, 'src'),
-    };
-
-    return config;
-  },
+  // 실험적 기능 제거하여 안정성 향상
+  // experimental: {
+  //   optimizeCss: true,
+  //   optimizePackageImports: ['@heroicons/react'],
+  // },
 
   // 컴파일러 설정
   compiler: {
