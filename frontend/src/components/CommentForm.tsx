@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-
-const API_URL = 'http://localhost:3000';
+import { commentsApi } from '@/lib/api';
 
 interface CommentFormProps {
   postId: string;
@@ -37,22 +36,7 @@ export default function CommentForm({
     setError('');
 
     try {
-      const response = await fetch(`${API_URL}/posts/${postId}/comments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          content: content.trim(),
-          parentId,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('댓글 작성에 실패했습니다.');
-      }
-
+      await commentsApi.createComment(postId, content.trim(), parentId);
       setContent('');
       onCommentAdded();
 

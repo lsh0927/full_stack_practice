@@ -5,20 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types/post';
 import { useAuth } from '@/contexts/AuthContext';
+import { postsApi, blocksApi, API_URL } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import CommentSection from '@/components/CommentSection';
-
-const API_URL = 'http://localhost:3000';
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 export default function PostDetailPage({
   params,
@@ -44,35 +33,20 @@ export default function PostDetailPage({
   useEffect(() => {
     async function fetchPost() {
       try {
-        const response = await fetch(`${API_URL}/posts/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-          cache: 'no-store',
-        });
-
-        if (response.status === 404) {
-          setError('게시글을 찾을 수 없습니다.');
-          setLoading(false);
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error('게시글을 불러오는데 실패했습니다.');
-        }
-
-        const data = await response.json();
+        const data = await postsApi.getPost(id);
         setPost(data);
         setLoading(false);
 
         if (!viewCountedRef.current) {
           viewCountedRef.current = true;
-          fetch(`${API_URL}/posts/${id}/views`, {
-            method: 'POST',
-          }).catch(() => {});
+          postsApi.incrementViews(id).catch(() => {});
         }
       } catch (err) {
-        setError('게시글을 불러오는 중 오류가 발생했습니다.');
+        if (err instanceof Error && err.message.includes('404')) {
+          setError('게시글을 찾을 수 없습니다.');
+        } else {
+          setError('게시글을 불러오는 중 오류가 발생했습니다.');
+        }
         setLoading(false);
       }
     }
@@ -97,17 +71,7 @@ export default function PostDetailPage({
     }
 
     try {
-      const response = await fetch(`${API_URL}/posts/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('삭제에 실패했습니다.');
-      }
-
+      await postsApi.deletePost(id);
       alert('게시글이 삭제되었습니다.');
       router.push('/posts');
     } catch (err) {
@@ -127,22 +91,12 @@ export default function PostDetailPage({
     setIsBlocking(true);
 
     try {
-      const response = await fetch(`${API_URL}/blocks/${post.author.id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '차단에 실패했습니다');
-      }
-
+      await blocksApi.blockUser(post.author.id);
       alert('사용자를 차단했습니다.');
       router.push('/posts'); // 게시글 목록으로 이동
-    } catch (err: any) {
-      alert(err.message || '차단 중 오류가 발생했습니다');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '차단 중 오류가 발생했습니다';
+      alert(message);
       setIsBlocking(false);
     }
   };

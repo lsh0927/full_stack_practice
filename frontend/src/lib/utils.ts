@@ -2,7 +2,7 @@
  * 유틸리티 함수 모음
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { API_URL } from './api';
 
 /**
  * 프로필 이미지 URL 처리

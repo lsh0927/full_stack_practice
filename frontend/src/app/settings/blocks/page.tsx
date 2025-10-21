@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { blocksApi, API_URL } from '@/lib/api';
 
 interface BlockedUser {
   id: string;
@@ -13,6 +12,18 @@ interface BlockedUser {
   email: string;
   profileImage?: string;
   blockedAt: string;
+}
+
+interface BlockedUserData {
+  id: string;
+  username: string;
+  email: string;
+  profileImage?: string;
+}
+
+interface Block {
+  blocked: BlockedUserData;
+  createdAt: string;
 }
 
 export default function BlockedUsersPage() {
@@ -31,19 +42,9 @@ export default function BlockedUsersPage() {
       }
 
       try {
-        const response = await fetch(`${API_URL}/blocks`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('차단 목록을 불러오는데 실패했습니다');
-        }
-
-        const data = await response.json();
+        const data = await blocksApi.getBlocks();
         // 백엔드가 { blocks: [...] } 형태로 반환
-        const mappedUsers = data.blocks.map((block: any) => ({
+        const mappedUsers = data.blocks.map((block: Block) => ({
           id: block.blocked.id,
           username: block.blocked.username,
           email: block.blocked.email,
@@ -73,23 +74,13 @@ export default function BlockedUsersPage() {
     setUnblockingUserId(userId);
 
     try {
-      const response = await fetch(`${API_URL}/blocks/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '차단 해제에 실패했습니다');
-      }
-
+      await blocksApi.unblockUser(userId);
       // Remove from local state
       setBlockedUsers((prev) => prev.filter((u) => u.id !== userId));
       alert('차단이 해제되었습니다.');
-    } catch (err: any) {
-      alert(err.message || '차단 해제 중 오류가 발생했습니다');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '차단 해제 중 오류가 발생했습니다';
+      alert(message);
     } finally {
       setUnblockingUserId(null);
     }

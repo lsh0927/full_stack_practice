@@ -52,8 +52,9 @@ export default function ChatRoomPage() {
 
         // 채팅방에 들어오면 모든 메시지를 읽음 처리
         markMessageAsRead({ roomId });
-      } catch (err: any) {
-        setError(err.message || '채팅방을 불러오지 못했습니다.');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : '채팅방을 불러오지 못했습니다.';
+        setError(message);
       } finally {
         setIsLoading(false);
       }

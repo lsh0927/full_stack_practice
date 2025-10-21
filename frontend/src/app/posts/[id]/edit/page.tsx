@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Post } from '@/types/post';
 import { useAuth } from '@/contexts/AuthContext';
-
-const API_URL = 'http://localhost:3000';
+import { postsApi, API_URL } from '@/lib/api';
 
 export default function EditPostPage({
   params,

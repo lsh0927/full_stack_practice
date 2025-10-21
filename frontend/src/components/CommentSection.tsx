@@ -3,10 +3,9 @@
 import { useEffect, useState } from 'react';
 import { Comment } from '@/types/comment';
 import { useAuth } from '@/contexts/AuthContext';
+import { commentsApi } from '@/lib/api';
 import CommentItem from './CommentItem';
 import CommentForm from './CommentForm';
-
-const API_URL = 'http://localhost:3000';
 
 interface CommentSectionProps {
   postId: string;
@@ -20,17 +19,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
 
   const fetchComments = async () => {
     try {
-      const response = await fetch(`${API_URL}/posts/${postId}/comments`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('댓글을 불러오는데 실패했습니다.');
-      }
-
-      const data = await response.json();
+      const data = await commentsApi.getComments(postId);
       setComments(data);
       setError('');
     } catch (err) {

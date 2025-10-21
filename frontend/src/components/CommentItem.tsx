@@ -3,29 +3,9 @@
 import { useState } from 'react';
 import { Comment } from '@/types/comment';
 import { useAuth } from '@/contexts/AuthContext';
+import { commentsApi, API_URL } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import CommentForm from './CommentForm';
-
-const API_URL = 'http://localhost:3000';
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return '방금 전';
-  if (diffMins < 60) return `${diffMins}분 전`;
-  if (diffHours < 24) return `${diffHours}시간 전`;
-  if (diffDays < 7) return `${diffDays}일 전`;
-
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
 
 interface CommentItemProps {
   comment: Comment;
@@ -62,21 +42,7 @@ export default function CommentItem({
     setUpdating(true);
 
     try {
-      const response = await fetch(`${API_URL}/comments/${comment.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          content: editContent.trim(),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('댓글 수정에 실패했습니다.');
-      }
-
+      await commentsApi.updateComment(comment.id, editContent.trim());
       setIsEditing(false);
       onCommentUpdated();
     } catch (err) {
@@ -94,17 +60,7 @@ export default function CommentItem({
     setDeleting(true);
 
     try {
-      const response = await fetch(`${API_URL}/comments/${comment.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('댓글 삭제에 실패했습니다.');
-      }
-
+      await commentsApi.deleteComment(comment.id);
       onCommentDeleted();
     } catch (err) {
       alert('댓글 삭제 중 오류가 발생했습니다.');

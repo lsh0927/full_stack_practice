@@ -35,8 +35,9 @@ export default function ChatsPage() {
       setChatRooms(rooms);
       setUnreadCounts(unreadCountsByRoom);
       setTotalUnreadCount(unreadCountResponse.count);
-    } catch (err: any) {
-      setError(err.message || '채팅방 목록을 불러오지 못했습니다.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '채팅방 목록을 불러오지 못했습니다.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }

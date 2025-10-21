@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { chatApi } from '@/lib/api';
+import { chatApi, usersApi, API_URL } from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 import BlockConfirmModal from '@/components/BlockConfirmModal';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 interface UserProfile {
   id: string;
@@ -19,15 +18,6 @@ interface UserProfile {
   postCount: number;
   isOwnProfile: boolean;
   isBlocked: boolean;
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 }
 
 export default function ProfilePage() {
@@ -49,17 +39,7 @@ export default function ProfilePage() {
       }
 
       try {
-        const response = await fetch(`${API_URL}/users/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('프로필을 불러오는데 실패했습니다');
-        }
-
-        const data = await response.json();
+        const data = await usersApi.getUser(id as string);
         setProfile(data);
         setLoading(false);
       } catch (err) {
@@ -82,8 +62,9 @@ export default function ProfilePage() {
       const chatRoom = await chatApi.requestChat(id);
       // 채팅방으로 이동
       router.push(`/chats/${chatRoom.id}`);
-    } catch (err: any) {
-      alert(err.message || '채팅 시작에 실패했습니다');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '채팅 시작에 실패했습니다';
+      alert(message);
       setIsStartingChat(false);
     }
   };
@@ -110,8 +91,9 @@ export default function ProfilePage() {
       alert('사용자를 차단했습니다.');
       setShowBlockModal(false);
       router.push('/posts'); // 게시글 목록으로 이동
-    } catch (err: any) {
-      alert(err.message || '차단 중 오류가 발생했습니다');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '차단 중 오류가 발생했습니다';
+      alert(message);
       setIsBlocking(false);
       setShowBlockModal(false);
     }
@@ -145,8 +127,9 @@ export default function ProfilePage() {
       // 프로필 정보 다시 불러오기
       router.refresh();
       window.location.reload();
-    } catch (err: any) {
-      alert(err.message || '차단 해제 중 오류가 발생했습니다');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '차단 해제 중 오류가 발생했습니다';
+      alert(message);
     } finally {
       setIsBlocking(false);
     }

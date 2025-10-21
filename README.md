@@ -1056,11 +1056,85 @@ cat .env
 
 ---
 
+## 🎨 최근 업데이트 (2025-01-22)
+
+### 프론트엔드 리팩토링 및 UI/UX 개선
+
+#### 1. API 클라이언트 통합 및 중앙화 ✅
+- **목적**: 코드 중복 제거 및 유지보수성 향상
+- **변경사항**:
+  - `lib/api.ts`에 중앙화된 API 클라이언트 구현
+  - `authFetch` 헬퍼 함수로 인증 헤더 자동 처리
+  - 도메인별 API 객체 생성: `authApi`, `postsApi`, `commentsApi`, `blocksApi`, `usersApi`, `chatApi`
+  - 15개 이상의 파일에서 하드코딩된 `fetch` 호출 제거
+  - 단일 `API_URL` 상수로 환경 설정 통합
+- **이점**:
+  - API 엔드포인트 변경 시 한 곳만 수정
+  - 일관된 에러 처리
+  - 타입 안전성 향상
+
+#### 2. 유틸리티 함수 통합 ✅
+- **목적**: 코드 중복 제거 및 일관성 확보
+- **변경사항**:
+  - `formatDate` 함수 중복 제거 (4개 파일에서 제거)
+  - `lib/utils.ts`로 유틸리티 함수 통합
+  - 날짜 포맷팅 로직 단일화
+- **이점**:
+  - 날짜 표시 형식 일관성
+  - 버그 수정 시 한 곳만 수정
+
+#### 3. 색상 팔레트 및 테마 시스템 구축 ✅
+- **목적**: 다크 모드 지원 및 디자인 시스템 확립
+- **변경사항**:
+  - `globals.css`에 CSS 변수 기반 색상 시스템 구축
+    - 브랜드 색상 (primary, secondary)
+    - 기능 색상 (success, error, warning, info)
+    - 라이트/다크 모드 완전 지원
+  - `ThemeContext` 생성 (light/dark/system 모드)
+    - 시스템 테마 자동 감지
+    - localStorage 테마 설정 저장
+    - `toggleTheme()` 함수로 테마 전환
+  - `layout.tsx`에 ThemeProvider 통합
+- **이점**:
+  - 사용자 선호도에 맞는 테마 제공
+  - 일관된 색상 시스템
+  - 다크 모드 지원으로 사용자 경험 향상
+
+#### 4. 타입 안전성 강화 및 any 타입 제거 ✅
+- **목적**: TypeScript 타입 안전성 확보
+- **변경사항**:
+  - 9개 파일에서 `any` 타입 완전 제거
+  - Error 객체 타입 체크로 대체 (`instanceof Error`)
+  - Block 관련 인터페이스 추가 (`Block`, `BlockedUserData`)
+  - TypeScript 컴파일 오류 수정
+- **이점**:
+  - 컴파일 타임 에러 감지
+  - IDE 자동완성 및 타입 체크 개선
+  - 런타임 에러 감소
+
+#### 5. 기술 부채 해결
+- **파일별 변경사항**:
+  - ✅ `CommentSection.tsx`, `CommentForm.tsx`, `CommentItem.tsx` - API 클라이언트 통합
+  - ✅ `posts/page.tsx`, `posts/[id]/page.tsx` - API 통합 및 formatDate 중복 제거
+  - ✅ `posts/new/page.tsx`, `posts/[id]/edit/page.tsx` - API_URL import 수정
+  - ✅ `profile/[id]/page.tsx` - API 통합, formatDate 제거, any 타입 제거
+  - ✅ `settings/blocks/page.tsx` - Block 타입 정의 및 any 제거
+  - ✅ `chats/[roomId]/page.tsx`, `chats/page.tsx` - any 타입 제거
+  - ✅ `AuthContext.tsx` - API_URL import 통합
+  - ✅ `globals.css` - 색상 시스템 및 다크 모드 추가
+  - ✅ `ThemeContext.tsx` - 새로 생성
+  - ✅ `layout.tsx` - ThemeProvider 통합
+
+---
+
 ## 📈 향후 개선 사항
 
 - [x] JWT 기반 인증 시스템
 - [x] PostgreSQL + TypeORM 마이그레이션
 - [x] N+1 쿼리 방지
+- [x] API 클라이언트 중앙화 및 하드코딩 제거
+- [x] 색상 팔레트 및 다크 모드 지원
+- [x] TypeScript 타입 안전성 강화 (any 타입 제거)
 - [ ] 카카오 OAuth2 로그인
 - [ ] Redis를 활용한 캐싱
 - [ ] 댓글 기능
