@@ -107,13 +107,14 @@ export class BlocksService {
    * @param blockerId - 차단한 사용자 ID
    */
   async getBlockedUserIds(blockerId: string): Promise<string[]> {
-    const blocks = await this.blockRepository
-      .createQueryBuilder('block')
-      .select('block.blocked_id', 'blockedId')
-      .where('block.blocker_id = :blockerId', { blockerId })
-      .getRawMany();
+    const blocks = await this.blockRepository.find({
+      where: { blocker: { id: blockerId } },
+      select: ['blocked'],
+      relations: ['blocked'],
+    });
 
-    return blocks.map((block) => block.blockedId);
+    console.log('🚫 [getBlockedUserIds] blockerId:', blockerId, 'result:', blocks);
+    return blocks.map((block) => block.blocked.id);
   }
 
   /**
@@ -122,13 +123,14 @@ export class BlocksService {
    * @param userId - 차단당한 사용자 ID
    */
   async getBlockerUserIds(userId: string): Promise<string[]> {
-    const blocks = await this.blockRepository
-      .createQueryBuilder('block')
-      .select('block.blocker_id', 'blockerId')
-      .where('block.blocked_id = :userId', { userId })
-      .getRawMany();
+    const blocks = await this.blockRepository.find({
+      where: { blocked: { id: userId } },
+      select: ['blocker'],
+      relations: ['blocker'],
+    });
 
-    return blocks.map((block) => block.blockerId);
+    console.log('🚫 [getBlockerUserIds] userId:', userId, 'result:', blocks);
+    return blocks.map((block) => block.blocker.id);
   }
 
   /**

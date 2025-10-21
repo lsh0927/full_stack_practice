@@ -4,11 +4,13 @@ import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { QueueModule } from '../queue/queue.module';
+import { BlocksModule } from '../blocks/blocks.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     QueueModule, // 이미지 처리 큐 사용
+    BlocksModule, // 차단 기능 사용
   ],
   controllers: [UsersController],
   providers: [UsersService],

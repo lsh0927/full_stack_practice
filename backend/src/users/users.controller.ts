@@ -18,6 +18,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { UsersService } from './users.service';
+import { BlocksService } from '../blocks/blocks.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -31,6 +32,7 @@ import { MESSAGE_PATTERNS } from '../queue/constants/queue.constants';
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
+    private readonly blocksService: BlocksService,
     @Inject('IMAGE_SERVICE') private readonly imageClient: ClientProxy,
   ) {}
 
@@ -39,6 +41,7 @@ export class UsersController {
    * - 사용자 정보 반환 (비밀번호 제외)
    * - 본인 여부 확인 로직 추가
    * - 해당 사용자의 게시글 수 포함
+   * - 차단 여부 확인
    */
   @Get(':id')
   @UseGuards(JwtAuthGuard)
@@ -52,9 +55,13 @@ export class UsersController {
     // 본인 여부 확인 (req.user는 User 객체이므로 req.user.id 사용)
     const isOwnProfile = req.user.id === id;
 
+    // 차단 여부 확인 (내가 이 사용자를 차단했는지)
+    const isBlocked = isOwnProfile ? false : await this.blocksService.isBlocked(req.user.id, id);
+
     return {
       ...user,
       isOwnProfile,
+      isBlocked,
     };
   }
 

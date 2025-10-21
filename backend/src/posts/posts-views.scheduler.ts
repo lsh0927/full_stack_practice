@@ -49,7 +49,7 @@ export class PostsViewsScheduler {
         const postId = key.replace('post:views:', '');
         const redisViews = await this.redisService.get(key);
 
-        if (redisViews) {
+        if (redisViews && typeof redisViews === 'string') {
           const viewCount = parseInt(redisViews, 10);
 
           // DB에서 현재 조회수 조회

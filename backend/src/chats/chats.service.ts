@@ -110,9 +110,18 @@ export class ChatsService {
       .orderBy('chatRoom.updatedAt', 'DESC')
       .getMany();
 
+    // 차단한 사용자 ID 목록 조회
+    const blockedUserIds = await this.blocksService.getBlockedUserIds(userId);
+
+    // 차단한 사용자와의 채팅방 제외
+    const filteredChatRooms = chatRooms.filter((room) => {
+      const otherParticipant = room.participants.find((p) => p.id !== userId);
+      return !blockedUserIds.includes(otherParticipant?.id || '');
+    });
+
     // 각 채팅방의 마지막 메시지 가져오기
     const chatRoomsWithLastMessage = await Promise.all(
-      chatRooms.map(async (room) => {
+      filteredChatRooms.map(async (room) => {
         const lastMessage = await this.messageModel
           .findOne({ roomId: room.id })
           .sort({ createdAt: -1 })
@@ -175,18 +184,28 @@ export class ChatsService {
     limit: number = 50,
   ): Promise<{ messages: Message[]; total: number; page: number; totalPages: number }> {
     // 채팅방 권한 확인
-    await this.getChatRoom(roomId, userId);
+    const chatRoom = await this.getChatRoom(roomId, userId);
 
-    // 메시지 조회
+    // 차단한 사용자 ID 목록 조회
+    const blockedUserIds = await this.blocksService.getBlockedUserIds(userId);
+
+    // 메시지 조회 (차단한 사용자의 메시지 제외)
     const skip = (page - 1) * limit;
+    const query = {
+      roomId,
+      ...(blockedUserIds.length > 0 && {
+        senderId: { $nin: blockedUserIds },
+      }),
+    };
+
     const [messages, total] = await Promise.all([
       this.messageModel
-        .find({ roomId })
+        .find(query)
         .sort({ createdAt: -1 }) // 최신순
         .skip(skip)
         .limit(limit)
         .exec(),
-      this.messageModel.countDocuments({ roomId }),
+      this.messageModel.countDocuments(query),
     ]);
 
     return {
@@ -203,6 +222,11 @@ export class ChatsService {
    * @param senderId - 발신자 ID
    * @param receiverId - 수신자 ID
    * @param content - 메시지 내용
+   *
+   * 참고: 차단된 사용자도 메시지를 보낼 수 있습니다.
+   * - 차단당한 사용자는 눈치채지 못하도록 정상 동작
+   * - 메시지는 DB에 저장됨 (차단 해제 시 복구 가능)
+   * - 차단한 사용자는 메시지를 못 봄 (getMessages에서 필터링)
    */
   async createMessage(
     roomId: string,
@@ -213,7 +237,7 @@ export class ChatsService {
     // 채팅방 권한 확인
     await this.getChatRoom(roomId, senderId);
 
-    // 메시지 생성 및 저장
+    // 메시지 생성 및 저장 (차단 여부와 관계없이 저장)
     const message = new this.messageModel({
       roomId,
       senderId,
@@ -265,13 +289,24 @@ export class ChatsService {
   /**
    * 사용자의 읽지 않은 메시지 수 조회
    * @param userId - 사용자 ID
-   * @returns 읽지 않은 메시지 수
+   * @returns 읽지 않은 메시지 수 (차단한 사용자의 메시지 제외)
    */
   async getUnreadCount(userId: string): Promise<number> {
-    return await this.messageModel.countDocuments({
+    // 차단한 사용자 ID 목록 조회
+    const blockedUserIds = await this.blocksService.getBlockedUserIds(userId);
+
+    // 차단한 사용자의 메시지를 제외한 읽지 않은 메시지 수 조회
+    const query: any = {
       receiverId: userId,
       isRead: false,
-    });
+    };
+
+    // 차단한 사용자가 있으면 해당 사용자의 메시지 제외
+    if (blockedUserIds.length > 0) {
+      query.senderId = { $nin: blockedUserIds };
+    }
+
+    return await this.messageModel.countDocuments(query);
   }
 
   /**

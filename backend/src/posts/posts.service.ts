@@ -94,10 +94,10 @@ export class PostsService {
       }
     }
 
-    // 검색 조건
+    // 검색 조건 (제목, 내용, 작성자)
     if (search) {
       queryBuilder.andWhere(
-        '(post.title ILIKE :search OR post.content ILIKE :search)',
+        '(post.title ILIKE :search OR post.content ILIKE :search OR author.username ILIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -198,10 +198,10 @@ export class PostsService {
       }
     }
 
-    // 검색 조건 추가
+    // 검색 조건 추가 (제목, 내용, 작성자)
     if (search) {
       queryBuilder.andWhere(
-        '(post.title ILIKE :search OR post.content ILIKE :search)',
+        '(post.title ILIKE :search OR post.content ILIKE :search OR author.username ILIKE :search)',
         { search: `%${search}%` },
       );
     }
