@@ -132,7 +132,7 @@ export default function ChatRoomPage() {
       }
     });
 
-    // 에러 처리
+    // 에러 처리 (개발 디버깅용)
     socket.on('error', (error: { message: string }) => {
       console.error('Socket error:', error);
     });

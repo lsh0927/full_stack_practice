@@ -51,9 +51,9 @@ export default function Header() {
     }
   }, [isAuthenticated]);
 
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
+  const handleLogout = async () => {
+    await logout();
+    // logout 함수 내에서 리다이렉트 처리됨
   };
 
   return (
@@ -89,6 +89,13 @@ export default function Header() {
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   )}
+                </Link>
+
+                <Link
+                  href="/settings/blocks"
+                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  차단 목록
                 </Link>
 
                 {user && (

@@ -174,7 +174,7 @@ export default function PostsPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="검색..."
-              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900 placeholder:text-gray-400"
             />
             {searchInput && (
               <button
@@ -248,12 +248,19 @@ export default function PostsPage() {
                           src={`${API_URL}${post.author.profileImage}`}
                           alt={post.author.username}
                           className="w-10 h-10 rounded-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
                         />
-                      ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-                          {post.author?.username?.[0]?.toUpperCase() || '?'}
-                        </div>
-                      )}
+                      ) : null}
+                      <div
+                        className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold"
+                        style={{ display: post.author?.profileImage ? 'none' : 'flex' }}
+                      >
+                        {post.author?.username?.[0]?.toUpperCase() || '?'}
+                      </div>
                       <div className="ml-3">
                         <p className="font-semibold text-gray-900 hover:text-purple-600">
                           {post.author?.username || '알 수 없음'}

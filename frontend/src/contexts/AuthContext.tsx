@@ -191,12 +191,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // 즉시 인증 상태 해제
     setUser(null);
     setToken(null);
     setRefreshToken(null);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
+      // 로그인 페이지로 리다이렉트
+      window.location.href = '/auth/login';
     }
   };
 
