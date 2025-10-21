@@ -1,6 +1,7 @@
 'use client';
 
 import { ButtonHTMLAttributes, ReactNode } from 'react';
+import { motion } from 'framer-motion';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'kakao' | 'outline';
 export type ButtonSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
@@ -48,27 +49,55 @@ export default function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button
+    <motion.button
       disabled={disabled || isLoading}
       className={`
         inline-flex items-center justify-center gap-2
         font-medium rounded-full
-        transform transition-all duration-200
         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500
-        disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-        active:scale-95
+        disabled:opacity-50 disabled:cursor-not-allowed
         ${variantClasses[variant]}
         ${sizeClasses[size]}
         ${className}
       `}
+      whileHover={
+        disabled || isLoading
+          ? undefined
+          : {
+              scale: 1.02,
+              y: -2,
+              transition: { type: 'spring', stiffness: 400, damping: 17 },
+            }
+      }
+      whileTap={
+        disabled || isLoading
+          ? undefined
+          : {
+              scale: 0.95,
+              y: 0,
+              transition: { type: 'spring', stiffness: 400, damping: 17 },
+            }
+      }
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.2,
+        ease: 'easeOut',
+      }}
       {...props}
     >
       {isLoading && (
-        <svg
-          className="animate-spin -ml-1 mr-2 h-4 w-4"
+        <motion.svg
+          className="-ml-1 mr-2 h-4 w-4"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
+          animate={{ rotate: 360 }}
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
         >
           <circle
             className="opacity-25"
@@ -83,11 +112,27 @@ export default function Button({
             fill="currentColor"
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
           />
-        </svg>
+        </motion.svg>
       )}
-      {!isLoading && leftIcon && <span>{leftIcon}</span>}
+      {!isLoading && leftIcon && (
+        <motion.span
+          initial={{ opacity: 0, x: -5 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {leftIcon}
+        </motion.span>
+      )}
       {children}
-      {!isLoading && rightIcon && <span>{rightIcon}</span>}
-    </button>
+      {!isLoading && rightIcon && (
+        <motion.span
+          initial={{ opacity: 0, x: 5 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {rightIcon}
+        </motion.span>
+      )}
+    </motion.button>
   );
 }

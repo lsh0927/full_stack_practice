@@ -1,6 +1,7 @@
 'use client';
 
 import { HTMLAttributes, ReactNode } from 'react';
+import { motion } from 'framer-motion';
 
 export type CardVariant = 'default' | 'bordered' | 'elevated' | 'glass';
 export type CardPadding = 'none' | 'sm' | 'md' | 'lg';
@@ -39,19 +40,51 @@ export default function Card({
   ...props
 }: CardProps) {
   return (
-    <div
+    <motion.div
       className={`
         rounded-2xl
-        transition-all duration-200
         ${variantClasses[variant]}
         ${paddingClasses[padding]}
-        ${hoverable ? 'hover:shadow-md hover:scale-[1.01] cursor-pointer' : ''}
+        ${hoverable ? 'cursor-pointer' : ''}
         ${className}
       `}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1],
+      }}
+      whileHover={
+        hoverable
+          ? {
+              scale: 1.02,
+              y: -4,
+              boxShadow: '0 12px 24px rgba(0, 0, 0, 0.1)',
+              transition: {
+                type: 'spring',
+                stiffness: 400,
+                damping: 20,
+              },
+            }
+          : undefined
+      }
+      whileTap={
+        hoverable
+          ? {
+              scale: 0.98,
+              y: 0,
+              transition: {
+                type: 'spring',
+                stiffness: 400,
+                damping: 20,
+              },
+            }
+          : undefined
+      }
       {...props}
     >
       {children}
-    </div>
+    </motion.div>
   );
 }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 
@@ -66,83 +67,112 @@ export default function Modal({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={closeOnOverlayClick ? onClose : undefined}
-        aria-hidden="true"
-      />
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay */}
+          <motion.div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={closeOnOverlayClick ? onClose : undefined}
+            aria-hidden="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          />
 
-      {/* Modal Content */}
-      <div
-        className={`
-          relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl
-          w-full ${sizeClasses[size]} mx-4
-          overflow-hidden
-          animate-modal-slide-up
-        `}
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* Header */}
-        {(title || showCloseButton) && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
-            {showCloseButton && (
-              <button
-                onClick={onClose}
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                aria-label="Close modal"
+          {/* Modal Content */}
+          <motion.div
+            className={`
+              relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl
+              w-full ${sizeClasses[size]} mx-4
+              overflow-hidden
+            `}
+            role="dialog"
+            aria-modal="true"
+            initial={{
+              opacity: 0,
+              scale: 0.95,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.95,
+              y: 20,
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 300,
+              damping: 30,
+            }}
+          >
+            {/* Header */}
+            {(title || showCloseButton) && (
+              <motion.div
+                className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
+                {showCloseButton && (
+                  <motion.button
+                    onClick={onClose}
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                    aria-label="Close modal"
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </motion.button>
+                )}
+              </motion.div>
             )}
-          </div>
-        )}
 
-        {/* Body */}
-        <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">{children}</div>
+            {/* Body */}
+            <motion.div
+              className="px-6 py-4 max-h-[70vh] overflow-y-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15 }}
+            >
+              {children}
+            </motion.div>
 
-        {/* Footer */}
-        {footer && (
-          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">{footer}</div>
-        )}
-      </div>
-
-      {/* Animation Styles */}
-      <style jsx>{`
-        @keyframes modal-slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        .animate-modal-slide-up {
-          animation: modal-slide-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-      `}</style>
-    </div>
+            {/* Footer */}
+            {footer && (
+              <motion.div
+                className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {footer}
+              </motion.div>
+            )}
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -179,27 +209,43 @@ export function ConfirmModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm" showCloseButton={false}>
-      <div className="text-center py-4">
+      <motion.div
+        className="text-center py-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
         <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{title}</h3>
         <p className="text-sm text-gray-600 dark:text-gray-300">{message}</p>
-      </div>
+      </motion.div>
 
-      <div className="border-t border-gray-200 dark:border-gray-700 -mx-6 -mb-4 mt-4">
-        <button
+      <motion.div
+        className="border-t border-gray-200 dark:border-gray-700 -mx-6 -mb-4 mt-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <motion.button
           onClick={onConfirm}
           disabled={isLoading}
           className={`${confirmButtonClass} disabled:opacity-50 disabled:cursor-not-allowed`}
+          whileHover={!isLoading ? { scale: 1.02, backgroundColor: 'rgba(0,0,0,0.05)' } : undefined}
+          whileTap={!isLoading ? { scale: 0.98 } : undefined}
+          transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         >
           {isLoading ? '처리 중...' : confirmText}
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           onClick={onClose}
           disabled={isLoading}
           className="w-full py-3.5 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          whileHover={!isLoading ? { scale: 1.02, backgroundColor: 'rgba(0,0,0,0.03)' } : undefined}
+          whileTap={!isLoading ? { scale: 0.98 } : undefined}
+          transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         >
           {cancelText}
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     </Modal>
   );
 }

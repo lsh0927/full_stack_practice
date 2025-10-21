@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { getProfileImageUrl } from '@/lib/utils';
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -53,25 +54,55 @@ export default function Avatar({
   const { container, text } = sizeClasses[size];
 
   return (
-    <div
+    <motion.div
       className={`
         relative inline-flex items-center justify-center
         rounded-full overflow-hidden
         ${container}
-        ${onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
+        ${onClick ? 'cursor-pointer' : ''}
         ${className}
       `}
       onClick={onClick}
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{
+        type: 'spring',
+        stiffness: 260,
+        damping: 20,
+      }}
+      whileHover={
+        onClick
+          ? {
+              scale: 1.1,
+              rotate: [0, -5, 5, -5, 0],
+              transition: {
+                scale: { type: 'spring', stiffness: 300, damping: 15 },
+                rotate: { duration: 0.5 },
+              },
+            }
+          : undefined
+      }
+      whileTap={
+        onClick
+          ? {
+              scale: 0.9,
+              transition: { type: 'spring', stiffness: 400, damping: 17 },
+            }
+          : undefined
+      }
     >
       {showImage ? (
-        <img
+        <motion.img
           src={imageUrl}
           alt={alt}
           className="w-full h-full object-cover"
           onError={() => setImageError(true)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
         />
       ) : (
-        <div
+        <motion.div
           className={`
             w-full h-full
             flex items-center justify-center
@@ -79,11 +110,14 @@ export default function Avatar({
             text-white font-bold
             ${text}
           `}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
         >
           {getFallbackText()}
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
 
