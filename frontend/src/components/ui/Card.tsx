@@ -13,10 +13,10 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantClasses: Record<CardVariant, string> = {
-  default: 'bg-white shadow-sm border border-gray-100',
-  bordered: 'bg-white border-2 border-gray-200',
-  elevated: 'bg-white shadow-lg',
-  glass: 'bg-white/80 backdrop-blur-sm border border-white/20 shadow-xl',
+  default: 'bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700',
+  bordered: 'bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600',
+  elevated: 'bg-white dark:bg-gray-800 shadow-lg dark:shadow-2xl',
+  glass: 'bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/20 dark:border-gray-700/50 shadow-xl',
 };
 
 const paddingClasses: Record<CardPadding, string> = {
@@ -79,7 +79,7 @@ export function CardTitle({
   ...props
 }: HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3 className={`text-xl font-bold text-gray-900 ${className}`} {...props}>
+    <h3 className={`text-xl font-bold text-gray-900 dark:text-gray-100 ${className}`} {...props}>
       {children}
     </h3>
   );
@@ -94,7 +94,7 @@ export function CardBody({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`text-gray-600 ${className}`} {...props}>
+    <div className={`text-gray-600 dark:text-gray-300 ${className}`} {...props}>
       {children}
     </div>
   );
@@ -109,7 +109,7 @@ export function CardFooter({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`mt-4 pt-4 border-t border-gray-100 ${className}`} {...props}>
+    <div className={`mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 ${className}`} {...props}>
       {children}
     </div>
   );

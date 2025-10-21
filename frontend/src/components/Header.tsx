@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { connectSocket, getSocket } from '@/lib/socket';
+import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -57,23 +58,25 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* 로고 */}
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-gray-900">
+            <Link href="/" className="text-xl font-bold text-gray-900 dark:text-gray-100">
               Board Project
             </Link>
           </div>
 
           {/* 네비게이션 */}
           <nav className="flex items-center space-x-4">
+            {/* 다크모드 토글 */}
+            <ThemeToggle />
             {isAuthenticated ? (
               <>
                 <Link
                   href="/posts"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   게시글
                 </Link>
@@ -81,7 +84,7 @@ export default function Header() {
                 {/* 채팅 버튼 with 알림 뱃지 */}
                 <Link
                   href="/chats"
-                  className="relative text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="relative text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   채팅
                   {unreadCount > 0 && (
@@ -93,7 +96,7 @@ export default function Header() {
 
                 <Link
                   href="/settings/blocks"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   차단 목록
                 </Link>
@@ -101,7 +104,7 @@ export default function Header() {
                 {user && (
                   <Link
                     href={`/profile/${user.id}`}
-                    className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                    className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium"
                   >
                     프로필
                   </Link>
@@ -109,7 +112,7 @@ export default function Header() {
 
                 <button
                   onClick={handleLogout}
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   로그아웃
                 </button>
@@ -118,13 +121,13 @@ export default function Header() {
               <>
                 <Link
                   href="/login"
-                  className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   로그인
                 </Link>
                 <Link
                   href="/register"
-                  className="bg-blue-500 text-white hover:bg-blue-600 px-4 py-2 rounded-md text-sm font-medium"
+                  className="bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium"
                 >
                   회원가입
                 </Link>

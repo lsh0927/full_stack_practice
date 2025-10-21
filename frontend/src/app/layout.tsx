@@ -4,15 +4,20 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import ConditionalHeader from "@/components/ConditionalHeader";
+import PageTransition from "@/components/PageTransition";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
+  fallback: ["system-ui", "arial"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+  fallback: ["monospace"],
 });
 
 export const metadata: Metadata = {
@@ -34,8 +39,10 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <ConditionalHeader />
-            <main className="min-h-screen bg-gray-50">
-              {children}
+            <main className="min-h-screen bg-[var(--surface)] transition-colors duration-200">
+              <PageTransition>
+                {children}
+              </PageTransition>
             </main>
           </AuthProvider>
         </ThemeProvider>

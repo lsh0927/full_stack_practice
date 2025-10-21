@@ -44,3 +44,7 @@ export type {
   LoadingOverlayProps,
   LoadingSectionProps,
 } from './Spinner';
+
+// Icon
+export { default as Icon, icons } from './Icon';
+export type { IconProps, IconName } from './Icon';

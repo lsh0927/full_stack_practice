@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { chatApi, usersApi, API_URL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import BlockConfirmModal from '@/components/BlockConfirmModal';
+import ScrollAnimation from '@/components/ScrollAnimation';
 
 interface UserProfile {
   id: string;
@@ -137,9 +138,9 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="flex justify-center items-center h-96">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400"></div>
         </div>
       </div>
     );
@@ -147,11 +148,11 @@ export default function ProfilePage() {
 
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-2xl mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-red-600 mb-4">{error || '프로필을 찾을 수 없습니다'}</p>
-            <Link href="/posts" className="text-purple-600 hover:underline">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center border border-gray-200 dark:border-gray-700">
+            <p className="text-red-600 dark:text-red-400 mb-4">{error || '프로필을 찾을 수 없습니다'}</p>
+            <Link href="/posts" className="text-purple-600 dark:text-purple-400 hover:underline">
               게시글 목록으로 돌아가기
             </Link>
           </div>
@@ -161,15 +162,16 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Profile Card */}
-        <div className="rounded-lg shadow-lg overflow-hidden">
+        <ScrollAnimation animation="scaleIn" delay={0.1}>
+          <div className="rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
           {/* Cover */}
-          <div className="h-32 bg-gradient-to-r from-purple-600 to-pink-600"></div>
+          <div className="h-32 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500"></div>
 
           {/* Profile Info */}
-          <div className="px-8 pb-8 bg-white">
+          <div className="px-8 pb-8 bg-white dark:bg-gray-800 transition-colors duration-200">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-16 mb-6">
               <div className="flex items-end gap-4">
                 {/* Profile Image */}
@@ -177,7 +179,7 @@ export default function ProfilePage() {
                   <img
                     src={`${API_URL}${profile.profileImage}`}
                     alt={profile.username}
-                    className="w-32 h-32 rounded-full border-4 border-white object-cover shadow-lg"
+                    className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-700 object-cover shadow-lg"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                       const fallback = e.currentTarget.nextElementSibling as HTMLElement;
@@ -186,17 +188,17 @@ export default function ProfilePage() {
                   />
                 ) : null}
                 <div
-                  className="w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full border-4 border-white flex items-center justify-center text-white font-bold text-4xl shadow-lg"
+                  className="w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 rounded-full border-4 border-white dark:border-gray-700 flex items-center justify-center text-white font-bold text-4xl shadow-lg"
                   style={{ display: profile.profileImage ? 'none' : 'flex' }}
                 >
                   {profile.username[0].toUpperCase()}
                 </div>
 
                 <div className="mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                     {profile.username}
                   </h1>
-                  <p className="text-gray-500">{profile.email}</p>
+                  <p className="text-gray-500 dark:text-gray-400">{profile.email}</p>
                 </div>
               </div>
 
@@ -204,7 +206,7 @@ export default function ProfilePage() {
               {profile.isOwnProfile && (
                 <Link
                   href="/profile/edit"
-                  className="mt-4 sm:mt-0 px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all text-center"
+                  className="mt-4 sm:mt-0 px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white rounded-full font-semibold hover:shadow-lg transition-all text-center"
                 >
                   프로필 수정
                 </Link>
@@ -216,7 +218,7 @@ export default function ProfilePage() {
                   <button
                     onClick={handleStartChat}
                     disabled={isStartingChat}
-                    className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white rounded-full font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isStartingChat ? '채팅 시작 중...' : '채팅하기'}
                   </button>
@@ -224,7 +226,7 @@ export default function ProfilePage() {
                     <button
                       onClick={handleUnblockUser}
                       disabled={isBlocking}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-full font-semibold hover:bg-blue-700 dark:hover:bg-blue-800 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isBlocking ? '해제 중...' : '차단 해제'}
                     </button>
@@ -232,7 +234,7 @@ export default function ProfilePage() {
                     <button
                       onClick={() => setShowBlockModal(true)}
                       disabled={isBlocking}
-                      className="px-6 py-2 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-6 py-2 bg-red-600 dark:bg-red-700 text-white rounded-full font-semibold hover:bg-red-700 dark:hover:bg-red-800 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isBlocking ? '차단 중...' : '사용자 차단'}
                     </button>
@@ -244,43 +246,46 @@ export default function ProfilePage() {
             {/* Bio */}
             {profile.bio && (
               <div className="mb-6">
-                <p className="text-gray-700 whitespace-pre-wrap">{profile.bio}</p>
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{profile.bio}</p>
               </div>
             )}
 
             {/* Stats */}
-            <div className="flex gap-8 py-4 border-y border-gray-200">
+            <div className="flex gap-8 py-4 border-y border-gray-200 dark:border-gray-700">
               <div>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {profile.postCount}
                 </p>
-                <p className="text-sm text-gray-500">게시글</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">게시글</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {formatDate(profile.createdAt)}
                 </p>
-                <p className="text-sm text-gray-500">가입일</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">가입일</p>
               </div>
             </div>
           </div>
         </div>
+        </ScrollAnimation>
 
         {/* User's Posts */}
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <ScrollAnimation animation="slideUp" delay={0.3}>
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             {profile.isOwnProfile ? '내 게시글' : `${profile.username}님의 게시글`}
           </h2>
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
             <p>게시글 목록 기능은 추후 구현 예정입니다.</p>
             <Link
               href="/posts"
-              className="inline-block mt-4 text-purple-600 hover:underline"
+              className="inline-block mt-4 text-purple-600 dark:text-purple-400 hover:underline"
             >
               전체 게시글 보기
             </Link>
           </div>
-        </div>
+          </div>
+        </ScrollAnimation>
       </div>
 
       {/* 차단 확인 모달 */}

@@ -16,12 +16,12 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:from-purple-700 hover:to-pink-700',
-  secondary: 'bg-blue-500 text-white hover:bg-blue-600',
-  danger: 'bg-red-600 text-white hover:bg-red-700',
-  ghost: 'text-gray-700 hover:bg-gray-100',
+    'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg hover:from-purple-700 hover:to-pink-700 dark:from-purple-500 dark:to-pink-500',
+  secondary: 'bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700',
+  danger: 'bg-red-600 dark:bg-red-700 text-white hover:bg-red-700 dark:hover:bg-red-800',
+  ghost: 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800',
   kakao: 'bg-[#FEE500] text-[#000000D9] hover:shadow-lg hover:bg-[#FDD835]',
-  outline: 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400',
+  outline: 'border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

@@ -7,9 +7,9 @@ export default function HomePage() {
   const { user, logout, isLoading } = useAuth();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[var(--background)] dark:bg-[var(--background)]">
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
+      <nav className="fixed top-0 left-0 right-0 bg-[var(--background)] dark:bg-[var(--background)] border-b border-gray-200 dark:border-gray-700 z-50">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             Board
@@ -22,16 +22,16 @@ export default function HomePage() {
                   <>
                     <Link
                       href={`/profile/${user.id}`}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                       <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
                         {user.username?.[0]?.toUpperCase() || 'U'}
                       </div>
-                      <span className="text-sm font-medium text-gray-700">{user.username}</span>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{user.username}</span>
                     </Link>
                     <button
                       onClick={logout}
-                      className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                      className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 font-medium transition-colors"
                     >
                       로그아웃
                     </button>
@@ -40,13 +40,13 @@ export default function HomePage() {
                   <>
                     <Link
                       href="/auth/login"
-                      className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                      className="px-6 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
                     >
                       로그인
                     </Link>
                     <Link
                       href="/auth/signup"
-                      className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-semibold transition-all"
+                      className="px-6 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full font-semibold transition-all"
                     >
                       회원가입
                     </Link>
@@ -78,10 +78,10 @@ export default function HomePage() {
           <h2 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             Share Your Story
           </h2>
-          <p className="text-xl text-gray-600 mb-4">
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-4">
             생각을 공유하고, 소통하고, 연결되세요
           </p>
-          <p className="text-gray-500 mb-12">
+          <p className="text-gray-500 dark:text-gray-400 mb-12">
             모던한 UI와 강력한 기능으로 당신의 이야기를 특별하게 만들어보세요
           </p>
 
@@ -98,51 +98,51 @@ export default function HomePage() {
       </div>
 
       {/* Features Grid */}
-      <div className="py-16 px-4 bg-gray-50">
+      <div className="py-16 px-4 bg-[var(--surface)] dark:bg-[var(--surface)]">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-3 gap-8">
             {/* Feature 1 */}
-            <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-shadow">
+            <div className="bg-[var(--background)] dark:bg-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-shadow">
               <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                 쉬운 작성
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 직관적인 인터페이스로 누구나 쉽게 게시글을 작성하고 공유할 수 있습니다
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-shadow">
+            <div className="bg-[var(--background)] dark:bg-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-shadow">
               <div className="w-14 h-14 bg-pink-100 rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-7 h-7 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                 강력한 검색
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 실시간 검색과 페이지네이션으로 원하는 게시글을 빠르게 찾아보세요
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-shadow">
+            <div className="bg-[var(--background)] dark:bg-gray-800 rounded-3xl p-8 shadow-sm hover:shadow-xl transition-shadow">
               <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">
                 실시간 조회
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
                 조회수 추적과 함께 인기 있는 게시글을 한눈에 확인할 수 있습니다
               </p>
             </div>
@@ -154,10 +154,10 @@ export default function HomePage() {
       <div className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">
               최신 기술 스택
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               검증된 기술로 안정적이고 빠른 서비스를 제공합니다
             </p>
           </div>
@@ -170,7 +170,7 @@ export default function HomePage() {
                   {['Next.js 15', 'React 19', 'TypeScript', 'Tailwind CSS'].map((tech) => (
                     <div key={tech} className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                      <span className="text-gray-700">{tech}</span>
+                      <span className="text-gray-700 dark:text-gray-200">{tech}</span>
                     </div>
                   ))}
                 </div>
@@ -182,7 +182,7 @@ export default function HomePage() {
                   {['NestJS 11', 'PostgreSQL 16', 'TypeORM', 'JWT Auth'].map((tech) => (
                     <div key={tech} className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-pink-600 rounded-full"></div>
-                      <span className="text-gray-700">{tech}</span>
+                      <span className="text-gray-700 dark:text-gray-200">{tech}</span>
                     </div>
                   ))}
                 </div>
@@ -193,12 +193,12 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="py-12 px-4 bg-gray-50 border-t border-gray-200">
+      <footer className="py-12 px-4 bg-[var(--surface)] dark:bg-[var(--surface)] border-t border-gray-200 dark:border-gray-700">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-gray-600 mb-2">
+          <p className="text-gray-600 dark:text-gray-300 mb-2">
             Made with ❤️ by Seungheon Lee
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             크래프톤 정글 10기 프로젝트
           </p>
         </div>

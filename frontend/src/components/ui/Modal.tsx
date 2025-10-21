@@ -80,7 +80,7 @@ export default function Modal({
       {/* Modal Content */}
       <div
         className={`
-          relative bg-white rounded-2xl shadow-xl
+          relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl
           w-full ${sizeClasses[size]} mx-4
           overflow-hidden
           animate-modal-slide-up
@@ -90,12 +90,12 @@ export default function Modal({
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
                 aria-label="Close modal"
               >
                 <svg
@@ -121,7 +121,7 @@ export default function Modal({
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">{footer}</div>
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">{footer}</div>
         )}
       </div>
 
@@ -174,17 +174,17 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   const confirmButtonClass =
     variant === 'danger'
-      ? 'w-full py-3.5 text-red-600 font-semibold hover:bg-gray-50 transition-colors border-b border-gray-200'
-      : 'w-full py-3.5 text-purple-600 font-semibold hover:bg-gray-50 transition-colors border-b border-gray-200';
+      ? 'w-full py-3.5 text-red-600 dark:text-red-400 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700'
+      : 'w-full py-3.5 text-purple-600 dark:text-purple-400 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700';
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="sm" showCloseButton={false}>
       <div className="text-center py-4">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-sm text-gray-600">{message}</p>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{title}</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-300">{message}</p>
       </div>
 
-      <div className="border-t border-gray-200 -mx-6 -mb-4 mt-4">
+      <div className="border-t border-gray-200 dark:border-gray-700 -mx-6 -mb-4 mt-4">
         <button
           onClick={onConfirm}
           disabled={isLoading}
@@ -195,7 +195,7 @@ export function ConfirmModal({
         <button
           onClick={onClose}
           disabled={isLoading}
-          className="w-full py-3.5 text-gray-900 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3.5 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {cancelText}
         </button>

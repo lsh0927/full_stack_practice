@@ -159,13 +159,13 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
             href="/posts"
-            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
+            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent"
           >
             Board
           </Link>
@@ -173,7 +173,7 @@ export default function EditProfilePage() {
           <div className="flex items-center gap-3">
             <Link
               href={`/profile/${user.id}`}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
             >
               {user.profileImage ? (
                 <img
@@ -182,17 +182,17 @@ export default function EditProfilePage() {
                   className="w-8 h-8 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                   {user.username[0].toUpperCase()}
                 </div>
               )}
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 {user.username}
               </span>
             </Link>
             <button
               onClick={logout}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+              className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 font-medium transition-colors"
             >
               로그아웃
             </button>
@@ -201,27 +201,27 @@ export default function EditProfilePage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">프로필 수정</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-8">프로필 수정</h1>
 
         {/* Messages */}
         {message && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-800">{message}</p>
+          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-green-800 dark:text-green-400">{message}</p>
           </div>
         )}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800">{error}</p>
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-800 dark:text-red-400">{error}</p>
           </div>
         )}
 
         {/* Profile Form */}
-        <form onSubmit={handleProfileUpdate} className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">기본 정보</h2>
+        <form onSubmit={handleProfileUpdate} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">기본 정보</h2>
 
           {/* Profile Image */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               프로필 사진
             </label>
             <div className="flex items-center gap-4">
@@ -232,7 +232,7 @@ export default function EditProfilePage() {
                   className="w-24 h-24 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-3xl">
+                <div className="w-24 h-24 bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-3xl">
                   {username[0]?.toUpperCase()}
                 </div>
               )}
@@ -240,43 +240,43 @@ export default function EditProfilePage() {
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="text-sm text-gray-600"
+                className="text-sm text-gray-600 dark:text-gray-300"
               />
             </div>
-            <p className="text-xs text-gray-500 mt-2">JPG, PNG, GIF (최대 5MB)</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">JPG, PNG, GIF (최대 5MB)</p>
           </div>
 
           {/* Username */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               사용자명
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-300 dark:focus:ring-purple-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               required
             />
           </div>
 
           {/* Email */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               이메일
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-300 dark:focus:ring-purple-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               required
             />
           </div>
 
           {/* Bio */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               자기소개
             </label>
             <textarea
@@ -284,61 +284,61 @@ export default function EditProfilePage() {
               onChange={(e) => setBio(e.target.value)}
               rows={4}
               maxLength={500}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-transparent resize-none"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-300 dark:focus:ring-purple-400 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="자기소개를 입력하세요..."
             />
-            <p className="text-xs text-gray-500 mt-1">{bio.length}/500</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{bio.length}/500</p>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50"
+            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50"
           >
             {loading ? '저장 중...' : '프로필 저장'}
           </button>
         </form>
 
         {/* Password Change Form */}
-        <form onSubmit={handlePasswordChange} className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">비밀번호 변경</h2>
+        <form onSubmit={handlePasswordChange} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">비밀번호 변경</h2>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               현재 비밀번호
             </label>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-300 dark:focus:ring-purple-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               required
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               새 비밀번호
             </label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-300 dark:focus:ring-purple-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               required
               minLength={6}
             />
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               새 비밀번호 확인
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-300 dark:focus:ring-purple-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               required
               minLength={6}
             />
@@ -347,7 +347,7 @@ export default function EditProfilePage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50"
+            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50"
           >
             {loading ? '변경 중...' : '비밀번호 변경'}
           </button>

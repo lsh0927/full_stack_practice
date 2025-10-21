@@ -7,6 +7,8 @@ import { chatApi } from '@/lib/api';
 import { ChatRoom, Message } from '@/types/chat';
 import { getProfileImageUrl, formatDate } from '@/lib/utils';
 import { connectSocket, getSocket } from '@/lib/socket';
+import ThemeToggle from '@/components/ThemeToggle';
+import ScrollAnimation from '@/components/ScrollAnimation';
 
 export default function ChatsPage() {
   const router = useRouter();
@@ -121,30 +123,30 @@ export default function ChatsPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">로딩 중...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-lg text-gray-900 dark:text-gray-100">로딩 중...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-600">{error}</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-red-600 dark:text-red-400">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
       {/* 인스타그램 스타일 헤더 */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* 뒤로가기 버튼 */}
             <button
               onClick={() => router.push('/')}
-              className="text-gray-800 hover:text-gray-600 transition-colors p-2"
+              className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400 transition-colors p-2"
               title="뒤로"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,24 +156,27 @@ export default function ChatsPage() {
 
             {/* 제목 */}
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-semibold text-gray-900">채팅</h1>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">채팅</h1>
               {totalUnreadCount > 0 && (
-                <span className="inline-flex items-center justify-center px-2.5 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                <span className="inline-flex items-center justify-center px-2.5 py-1 text-xs font-bold leading-none text-white bg-red-500 dark:bg-red-600 rounded-full">
                   {totalUnreadCount > 99 ? '99+' : totalUnreadCount}
                 </span>
               )}
             </div>
 
-            {/* 홈 버튼 */}
-            <button
-              onClick={() => router.push('/')}
-              className="text-gray-800 hover:text-gray-600 transition-colors p-2"
-              title="홈으로"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-            </button>
+            {/* 우측 버튼 그룹 */}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <button
+                onClick={() => router.push('/')}
+                className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400 transition-colors p-2"
+                title="홈으로"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -180,32 +185,36 @@ export default function ChatsPage() {
       <div className="flex-1 overflow-y-auto max-w-4xl mx-auto w-full p-6">
 
       {chatRooms.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <p>아직 채팅방이 없습니다.</p>
           <p className="mt-2">사용자 프로필에서 채팅을 시작해보세요!</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {chatRooms.map((room) => {
+          {chatRooms.map((room, index) => {
             const otherUser = getOtherParticipant(room);
             return (
-              <div
+              <ScrollAnimation
                 key={room.id}
-                onClick={() => handleChatRoomClick(room.id)}
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                animation="slideUp"
+                delay={0.1 * (index % 5)}
               >
-                <div className="flex items-center space-x-4">
+                <div
+                  onClick={() => handleChatRoomClick(room.id)}
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 hover:bg-gray-50 dark:hover:bg-gray-750 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md"
+                >
+                  <div className="flex items-center space-x-4">
                   {/* 프로필 이미지 */}
                   <div className="flex-shrink-0">
                     {getProfileImageUrl(otherUser?.profileImage) ? (
                       <img
                         src={getProfileImageUrl(otherUser?.profileImage)}
                         alt={otherUser?.username || ''}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
-                        <span className="text-gray-600 text-xl">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 flex items-center justify-center ring-2 ring-gray-100 dark:ring-gray-700">
+                        <span className="text-white text-xl font-bold">
                           {otherUser?.username?.[0]?.toUpperCase() || '?'}
                         </span>
                       </div>
@@ -214,34 +223,35 @@ export default function ChatsPage() {
 
                   {/* 채팅방 정보 */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-gray-900 truncate">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate">
                       {otherUser?.username || '알 수 없는 사용자'}
                     </h3>
                     {room.lastMessage ? (
-                      <p className="text-sm text-gray-900 font-semibold truncate">
+                      <p className="text-sm text-gray-900 dark:text-gray-300 font-semibold truncate">
                         {room.lastMessage.senderId === user?.id ? '나: ' : ''}
                         {room.lastMessage.content}
                       </p>
                     ) : (
-                      <p className="text-sm text-gray-500 font-medium italic">메시지 없음</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium italic">메시지 없음</p>
                     )}
                   </div>
 
                   {/* 시간 및 읽지 않은 메시지 수 */}
                   <div className="flex-shrink-0 flex flex-col items-end space-y-1">
-                    <div className="text-sm text-gray-500 font-medium">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
                       {room.lastMessage
                         ? formatDate(room.lastMessage.createdAt)
                         : formatDate(room.updatedAt)}
                     </div>
                     {unreadCounts[room.id] > 0 && (
-                      <div className="bg-red-500 text-white text-xs font-bold rounded-full px-2.5 py-1 min-w-[24px] text-center">
+                      <div className="bg-red-500 dark:bg-red-600 text-white text-xs font-bold rounded-full px-2.5 py-1 min-w-[24px] text-center">
                         {unreadCounts[room.id] > 99 ? '99+' : unreadCounts[room.id]}
                       </div>
                     )}
                   </div>
+                  </div>
                 </div>
-              </div>
+              </ScrollAnimation>
             );
           })}
         </div>

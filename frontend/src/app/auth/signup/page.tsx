@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { API_URL } from '@/lib/api';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -104,11 +105,16 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors duration-200">
+      {/* ThemeToggle - 우측 상단에 고정 */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-md">
         {/* 로고 */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl flex items-center justify-center transform rotate-12">
+          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 rounded-3xl flex items-center justify-center transform rotate-12 shadow-lg">
             <svg
               className="w-10 h-10 text-white transform -rotate-12"
               fill="none"
@@ -123,16 +129,16 @@ export default function SignupPage() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
             Join Us
           </h1>
-          <p className="text-gray-600 mt-2">새로운 계정을 만들어보세요</p>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">새로운 계정을 만들어보세요</p>
         </div>
 
         {/* 회원가입 폼 */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 border border-gray-100 dark:border-gray-700 transition-colors duration-200">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-red-600 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
@@ -140,11 +146,11 @@ export default function SignupPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* 프로필 이미지 업로드 */}
             <div className="flex flex-col items-center">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 프로필 사진 (선택)
               </label>
               <div className="relative">
-                <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity ring-4 ring-purple-100 dark:ring-purple-900">
                   {profileImagePreview ? (
                     <img
                       src={profileImagePreview}
@@ -164,11 +170,11 @@ export default function SignupPage() {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-2">클릭하여 이미지 선택 (최대 5MB)</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">클릭하여 이미지 선택 (최대 5MB)</p>
             </div>
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 사용자 이름
               </label>
               <input
@@ -177,13 +183,13 @@ export default function SignupPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                 placeholder="홍길동"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 이메일
               </label>
               <input
@@ -192,13 +198,13 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                 placeholder="your@email.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 비밀번호
               </label>
               <input
@@ -207,13 +213,13 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                 placeholder="••••••••"
               />
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 비밀번호 확인
               </label>
               <input
@@ -222,7 +228,7 @@ export default function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-gray-900"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                 placeholder="••••••••"
               />
             </div>
@@ -230,18 +236,18 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-full font-medium hover:shadow-lg transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white py-3 px-6 rounded-full font-medium hover:shadow-lg transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {isLoading ? '가입 중...' : '회원가입'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-300">
               이미 계정이 있으신가요?{' '}
               <Link
                 href="/auth/login"
-                className="text-purple-600 hover:text-pink-600 font-medium transition-colors"
+                className="text-purple-600 dark:text-purple-400 hover:text-pink-600 dark:hover:text-pink-400 font-medium transition-colors"
               >
                 로그인
               </Link>
@@ -251,17 +257,17 @@ export default function SignupPage() {
           {/* 구분선 */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">또는</span>
+              <span className="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">또는</span>
             </div>
           </div>
 
           {/* 카카오 로그인 버튼 */}
           <a
             href="http://localhost:3000/auth/kakao"
-            className="w-full bg-[#FEE500] text-[#000000D9] py-3 px-6 rounded-full font-medium hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-3"
+            className="w-full bg-[#FEE500] hover:bg-[#FDD835] text-[#000000D9] py-3 px-6 rounded-full font-medium hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-3"
           >
             <svg
               className="w-5 h-5"
@@ -280,7 +286,7 @@ export default function SignupPage() {
           <div className="mt-6 text-center">
             <Link
               href="/posts"
-              className="text-gray-500 hover:text-gray-700 text-sm transition-colors"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors"
             >
               ← 게시판으로 돌아가기
             </Link>

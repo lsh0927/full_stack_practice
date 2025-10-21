@@ -103,10 +103,10 @@ export default function PostDetailPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-96">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400"></div>
           </div>
         </div>
       </div>
@@ -115,13 +115,13 @@ export default function PostDetailPage({
 
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-2xl mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-red-600 mb-4">{error || '게시글을 찾을 수 없습니다.'}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow p-8 text-center border border-gray-200 dark:border-gray-700">
+            <p className="text-red-600 dark:text-red-400 mb-4">{error || '게시글을 찾을 수 없습니다.'}</p>
             <Link
               href="/posts"
-              className="text-purple-600 hover:underline"
+              className="text-purple-600 dark:text-purple-400 hover:underline"
             >
               목록으로 돌아가기
             </Link>
@@ -132,16 +132,16 @@ export default function PostDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
             Board
           </Link>
           <Link
             href="/posts"
-            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
+            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white rounded-full font-semibold hover:shadow-lg transition-all"
           >
             목록
           </Link>
@@ -150,26 +150,26 @@ export default function PostDetailPage({
 
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Post Card */}
-        <article className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <article className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
           {/* Post Header */}
-          <div className="p-6 border-b border-gray-100">
+          <div className="p-6 border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center mb-4">
               {post.author?.profileImage ? (
                 <img
                   src={`${API_URL}${post.author.profileImage}`}
                   alt={post.author.username}
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700"
                 />
               ) : (
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg ring-2 ring-gray-100 dark:ring-gray-700">
                   {post.author?.username?.[0]?.toUpperCase() || '?'}
                 </div>
               )}
               <div className="ml-3 flex-1">
-                <p className="font-semibold text-gray-900">{post.author?.username || '알 수 없음'}</p>
-                <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{post.author?.username || '알 수 없음'}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(post.createdAt)}</p>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -178,32 +178,32 @@ export default function PostDetailPage({
               </div>
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               {post.title}
             </h1>
           </div>
 
           {/* Post Content */}
           <div className="p-6">
-            <div className="text-gray-800 leading-relaxed whitespace-pre-wrap text-lg">
+            <div className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap text-lg">
               {post.content}
             </div>
           </div>
 
           {/* Post Footer */}
-          <div className="p-6 bg-gray-50 border-t border-gray-100">
+          <div className="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700">
             {/* 본인의 게시글일 때만 수정/삭제 버튼 표시 */}
             {user && post.author && post.author.id === user.id ? (
               <div className="flex gap-3 justify-end">
                 <Link
                   href={`/posts/${post.id}/edit`}
-                  className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors"
+                  className="px-6 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-full font-medium hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                 >
                   수정
                 </Link>
                 <button
                   onClick={handleDelete}
-                  className="px-6 py-2.5 bg-red-50 border border-red-200 text-red-600 rounded-full font-medium hover:bg-red-100 transition-colors"
+                  className="px-6 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-full font-medium hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
                 >
                   삭제
                 </button>
@@ -213,7 +213,7 @@ export default function PostDetailPage({
                 <button
                   onClick={handleBlockUser}
                   disabled={isBlocking}
-                  className="px-6 py-2.5 bg-red-600 text-white rounded-full font-medium hover:bg-red-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 bg-red-600 dark:bg-red-700 text-white rounded-full font-medium hover:bg-red-700 dark:hover:bg-red-800 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isBlocking ? '차단 중...' : '사용자 차단'}
                 </button>
@@ -229,7 +229,7 @@ export default function PostDetailPage({
         <div className="mt-6 text-center">
           <Link
             href="/posts"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors"
+            className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

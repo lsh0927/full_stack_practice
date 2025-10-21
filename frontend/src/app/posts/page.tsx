@@ -7,6 +7,7 @@ import { Post } from '@/types/post';
 import { useAuth } from '@/contexts/AuthContext';
 import { postsApi, API_URL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
+import ScrollAnimation from '@/components/ScrollAnimation';
 
 interface PostsResponse {
   posts: Post[];
@@ -93,10 +94,10 @@ export default function PostsPage() {
   // AuthContext가 아직 로딩 중이거나 posts가 로딩 중일 때
   if (authLoading || (loading && !error)) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="flex justify-center items-center h-96">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400"></div>
           </div>
         </div>
       </div>
@@ -105,13 +106,13 @@ export default function PostsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
         <div className="max-w-2xl mx-auto px-4 py-8">
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <p className="text-red-600 mb-4">{error}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow p-8 text-center border border-gray-200 dark:border-gray-700">
+            <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
             <Link
               href="/"
-              className="text-purple-600 hover:underline"
+              className="text-purple-600 dark:text-purple-400 hover:underline"
             >
               홈으로 돌아가기
             </Link>
@@ -122,50 +123,54 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="검색..."
-              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900 placeholder:text-gray-400"
-            />
-            {searchInput && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
-        </form>
+        <ScrollAnimation animation="fadeIn" delay={0.1}>
+          <form onSubmit={handleSearch} className="mb-6">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="검색..."
+                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </form>
+        </ScrollAnimation>
 
         {/* New Post Button */}
-        <div className="mb-6 flex justify-end">
-          <Link
-            href="/posts/new"
-            className="px-6 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-all"
-          >
-            작성
-          </Link>
-        </div>
+        <ScrollAnimation animation="slideLeft" delay={0.2}>
+          <div className="mb-6 flex justify-end">
+            <Link
+              href="/posts/new"
+              className="px-6 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-full font-semibold hover:bg-blue-600 dark:hover:bg-blue-700 transition-all shadow-sm hover:shadow-md"
+            >
+              작성
+            </Link>
+          </div>
+        </ScrollAnimation>
         {/* Search Info */}
         {searchQuery && (
-          <div className="mb-6 flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
-            <p className="text-gray-600">
-              &apos;<span className="font-semibold text-gray-900">{searchQuery}</span>&apos; 검색 결과: {total}개
+          <div className="mb-6 flex items-center justify-between bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <p className="text-gray-600 dark:text-gray-300">
+              &apos;<span className="font-semibold text-gray-900 dark:text-gray-100">{searchQuery}</span>&apos; 검색 결과: {total}개
             </p>
             <button
               onClick={handleClearSearch}
-              className="text-purple-600 hover:text-purple-700 font-medium"
+              className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-medium"
             >
               초기화
             </button>
@@ -174,26 +179,28 @@ export default function PostsPage() {
 
         {/* Posts List */}
         {posts.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-12 text-center border border-gray-200 dark:border-gray-700">
+            <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <p className="text-gray-500 mb-4">게시글이 없습니다</p>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">게시글이 없습니다</p>
             <Link
               href="/posts/new"
-              className="inline-block px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors"
+              className="inline-block px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white rounded-full hover:shadow-lg transition-all transform hover:scale-105"
             >
               첫 게시글 작성하기
             </Link>
           </div>
         ) : (
           <div className="space-y-4">
-            {posts.map((post) => (
-              <div
+            {posts.map((post, index) => (
+              <ScrollAnimation
                 key={post.id}
-                className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                animation="slideUp"
+                delay={0.1 * (index % 5)}
               >
-                <div className="p-6">
+                <div className="block bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700">
+                  <div className="p-6">
                   {/* Post Header */}
                   <div className="flex items-center mb-3">
                     <Link
@@ -205,7 +212,7 @@ export default function PostsPage() {
                         <img
                           src={`${API_URL}${post.author.profileImage}`}
                           alt={post.author.username}
-                          className="w-10 h-10 rounded-full object-cover"
+                          className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             const fallback = e.currentTarget.nextElementSibling as HTMLElement;
@@ -214,31 +221,31 @@ export default function PostsPage() {
                         />
                       ) : null}
                       <div
-                        className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold"
+                        className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 rounded-full flex items-center justify-center text-white font-bold ring-2 ring-gray-100 dark:ring-gray-700"
                         style={{ display: post.author?.profileImage ? 'none' : 'flex' }}
                       >
                         {post.author?.username?.[0]?.toUpperCase() || '?'}
                       </div>
                       <div className="ml-3">
-                        <p className="font-semibold text-gray-900 hover:text-purple-600">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400">
                           {post.author?.username || '알 수 없음'}
                         </p>
-                        <p className="text-sm text-gray-500">{formatDate(post.createdAt)}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(post.createdAt)}</p>
                       </div>
                     </Link>
                   </div>
 
                   {/* Post Content */}
                   <Link href={`/posts/${post.id}`}>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2 hover:text-purple-600 cursor-pointer">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 hover:text-purple-600 dark:hover:text-purple-400 cursor-pointer">
                       {post.title}
                     </h2>
-                    <p className="text-gray-600 line-clamp-2 mb-4">
+                    <p className="text-gray-600 dark:text-gray-300 line-clamp-2 mb-4">
                       {post.content}
                     </p>
 
                     {/* Post Footer */}
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                       <div className="flex items-center gap-1">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -254,8 +261,9 @@ export default function PostsPage() {
                       </div>
                     </div>
                   </Link>
+                  </div>
                 </div>
-              </div>
+              </ScrollAnimation>
             ))}
           </div>
         )}
@@ -266,7 +274,7 @@ export default function PostsPage() {
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg hover:bg-white dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-gray-600 dark:text-gray-300"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -280,8 +288,8 @@ export default function PostsPage() {
                   onClick={() => handlePageChange(page)}
                   className={`w-10 h-10 rounded-lg font-medium transition-all ${
                     currentPage === page
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                      : 'hover:bg-white text-gray-600'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white shadow-lg'
+                      : 'hover:bg-white dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
                   }`}
                 >
                   {page}
@@ -292,7 +300,7 @@ export default function PostsPage() {
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg hover:bg-white dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-gray-600 dark:text-gray-300"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -302,7 +310,7 @@ export default function PostsPage() {
         )}
 
         {/* Total Count */}
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
           전체 {total}개의 게시글
         </div>
       </div>

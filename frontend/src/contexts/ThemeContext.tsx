@@ -56,12 +56,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const updateDocumentTheme = (newTheme: 'light' | 'dark') => {
     const root = document.documentElement;
+    console.log('Updating document theme to:', newTheme);
     if (newTheme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
+      console.log('Dark mode applied. Classes:', root.classList.toString());
     } else {
       root.classList.add('light');
       root.classList.remove('dark');
+      console.log('Light mode applied. Classes:', root.classList.toString());
     }
   };
 

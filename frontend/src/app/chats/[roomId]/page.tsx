@@ -209,16 +209,16 @@ export default function ChatRoomPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">로딩 중...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        <div className="text-lg text-gray-900 dark:text-gray-100">로딩 중...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-600">{error}</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        <div className="text-red-600 dark:text-red-400">{error}</div>
       </div>
     );
   }
@@ -226,15 +226,15 @@ export default function ChatRoomPage() {
   const otherUser = getOtherUser();
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* 인스타그램 스타일 헤더 */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* 뒤로가기 버튼 */}
             <button
               onClick={() => router.push('/chats')}
-              className="text-gray-800 hover:text-gray-600 transition-colors p-2"
+              className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400 transition-colors p-2"
               title="뒤로"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,15 +255,15 @@ export default function ChatRoomPage() {
                     className="w-8 h-8 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-gray-600 font-semibold text-sm">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">
                       {otherUser.username[0].toUpperCase()}
                     </span>
                   </div>
                 )}
                 <div>
-                  <h2 className="font-semibold text-gray-900">{otherUser.username}</h2>
-                  {isTyping && <p className="text-xs text-gray-500">입력 중...</p>}
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">{otherUser.username}</h2>
+                  {isTyping && <p className="text-xs text-gray-500 dark:text-gray-400">입력 중...</p>}
                 </div>
               </div>
             )}
@@ -271,7 +271,7 @@ export default function ChatRoomPage() {
             {/* 홈 버튼 */}
             <button
               onClick={() => router.push('/')}
-              className="text-gray-800 hover:text-gray-600 transition-colors p-2"
+              className="text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400 transition-colors p-2"
               title="홈으로"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,7 +283,7 @@ export default function ChatRoomPage() {
       </header>
 
       {/* 메시지 영역 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 max-w-4xl mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900 max-w-4xl mx-auto w-full transition-colors duration-200">
         {messages.map((message) => {
           const isMine = message.senderId === user?.id;
           const messageUser = isMine ? user : otherUser;
@@ -308,8 +308,8 @@ export default function ChatRoomPage() {
                         className="w-8 h-8 rounded-full object-cover hover:opacity-80 transition-opacity"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center hover:opacity-80 transition-opacity">
-                        <span className="text-gray-600 text-sm font-semibold">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 flex items-center justify-center hover:opacity-80 transition-opacity">
+                        <span className="text-white text-sm font-semibold">
                           {otherUser?.username?.[0]?.toUpperCase() || '?'}
                         </span>
                       </div>
@@ -318,10 +318,10 @@ export default function ChatRoomPage() {
 
                   {/* 메시지 버블 */}
                   <div className="flex flex-col max-w-[75%] sm:max-w-[70%] md:max-w-md lg:max-w-lg">
-                    <div className="px-4 py-2 rounded-2xl bg-white border border-gray-200 text-gray-900 rounded-bl-sm">
+                    <div className="px-4 py-2 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-sm">
                       <p className="font-medium break-words">{message.content}</p>
                     </div>
-                    <p className="text-xs mt-1 px-1 text-left text-gray-500">
+                    <p className="text-xs mt-1 px-1 text-left text-gray-500 dark:text-gray-400">
                       {formatMessageTime(message.createdAt)}
                     </p>
                   </div>
@@ -331,10 +331,10 @@ export default function ChatRoomPage() {
               {/* 본인 메시지: 메시지만 */}
               {isMine && (
                 <div className="flex flex-col max-w-[75%] sm:max-w-[70%] md:max-w-md lg:max-w-lg">
-                  <div className="px-4 py-2 rounded-2xl bg-blue-500 text-white rounded-br-sm">
+                  <div className="px-4 py-2 rounded-2xl bg-blue-500 dark:bg-blue-600 text-white rounded-br-sm">
                     <p className="font-medium break-words">{message.content}</p>
                   </div>
-                  <p className="text-xs mt-1 px-1 text-right text-gray-500">
+                  <p className="text-xs mt-1 px-1 text-right text-gray-500 dark:text-gray-400">
                     {formatMessageTime(message.createdAt)}
                     {message.isRead && ' · 읽음'}
                   </p>
@@ -347,7 +347,7 @@ export default function ChatRoomPage() {
       </div>
 
       {/* 입력 영역 */}
-      <form onSubmit={handleSendMessage} className="bg-white border-t border-gray-200">
+      <form onSubmit={handleSendMessage} className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex space-x-2">
           <input
@@ -358,12 +358,12 @@ export default function ChatRoomPage() {
               handleTyping();
             }}
             placeholder="메시지를 입력하세요..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-medium"
+            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 font-medium"
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
           >
             전송
           </button>
