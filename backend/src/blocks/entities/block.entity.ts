@@ -5,6 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
   Unique,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -17,6 +18,8 @@ import { User } from '../../users/entities/user.entity';
  */
 @Entity('blocks')
 @Unique(['blocker', 'blocked']) // 같은 사용자를 중복으로 차단할 수 없음
+@Index(['blocker']) // 내가 차단한 사용자 목록 조회 성능 향상
+@Index(['blocked']) // 나를 차단한 사용자 목록 조회 성능 향상
 export class Block {
   /**
    * Primary Key

@@ -7,6 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Post } from '../../posts/entities/post.entity';
@@ -35,6 +36,10 @@ export class Comment {
   @JoinColumn({ name: 'authorId' })
   author: User;
 
+  /**
+   * 인덱스: 특정 사용자의 댓글 조회 성능 향상
+   */
+  @Index()
   @Column()
   authorId: string;
 
@@ -48,6 +53,10 @@ export class Comment {
   @JoinColumn({ name: 'postId' })
   post: Post;
 
+  /**
+   * 인덱스: 특정 게시글의 댓글 조회 성능 향상
+   */
+  @Index()
   @Column()
   postId: string;
 

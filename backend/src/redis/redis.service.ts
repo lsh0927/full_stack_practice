@@ -81,6 +81,16 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * 숫자 값 증가 (INCR)
+   * @param key 키
+   * @param increment 증가량 (기본값: 1)
+   * @returns 증가 후 값
+   */
+  async incr(key: string, increment: number = 1): Promise<number> {
+    return await this.client.incrBy(key, increment);
+  }
+
+  /**
    * Redis 연결 테스트
    * @returns 연결 성공 여부
    */

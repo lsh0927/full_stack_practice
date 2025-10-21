@@ -74,12 +74,54 @@ export default function ChatRoomPage() {
 
     // 새 메시지 수신
     socket.on('message:receive', (message: Message) => {
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        // 중복 메시지 방지
+        const isDuplicate = prev.some((m) => m._id === message._id);
+        if (isDuplicate) {
+          return prev;
+        }
+
+        // 임시 메시지를 실제 메시지로 교체
+        if (message.senderId === user?.id) {
+          // 같은 내용의 임시 메시지 찾기
+          const tempMessageIndex = prev.findIndex(
+            (m) => m._id.startsWith('temp-') && m.content === message.content && m.senderId === user?.id
+          );
+
+          if (tempMessageIndex !== -1) {
+            // 임시 메시지를 실제 메시지로 교체
+            const newMessages = [...prev];
+            newMessages[tempMessageIndex] = message;
+            return newMessages;
+          }
+        }
+
+        return [...prev, message];
+      });
       scrollToBottom();
 
       // 상대방의 메시지인 경우 읽음 처리
       if (message.senderId !== user?.id) {
         markMessageAsRead({ roomId, messageId: message._id });
+      }
+    });
+
+    // 읽음 처리 확인 이벤트 수신
+    socket.on('message:readConfirm', (data: { roomId: string; userId: string; messageId?: string }) => {
+      if (data.userId !== user?.id) {
+        setMessages((prev) =>
+          prev.map((msg) => {
+            // 특정 메시지 읽음 처리
+            if (data.messageId && msg._id === data.messageId && msg.senderId === user?.id) {
+              return { ...msg, isRead: true };
+            }
+            // 채팅방 전체 메시지 읽음 처리
+            if (!data.messageId && msg.senderId === user?.id && msg.receiverId === data.userId) {
+              return { ...msg, isRead: true };
+            }
+            return msg;
+          })
+        );
       }
     });
 
@@ -99,6 +141,7 @@ export default function ChatRoomPage() {
     return () => {
       leaveRoom(roomId);
       socket.off('message:receive');
+      socket.off('message:readConfirm');
       socket.off('typing:status');
       socket.off('error');
     };
@@ -117,10 +160,28 @@ export default function ChatRoomPage() {
     const otherUser = chatRoom.participants.find((p) => p.id !== user.id);
     if (!otherUser) return;
 
+    const messageContent = newMessage.trim();
+
+    // 낙관적 업데이트: 메시지를 즉시 화면에 표시
+    const optimisticMessage: Message = {
+      _id: `temp-${Date.now()}`, // 임시 ID
+      roomId,
+      senderId: user.id,
+      receiverId: otherUser.id,
+      content: messageContent,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, optimisticMessage]);
+    scrollToBottom();
+
+    // 서버로 메시지 전송
     sendMessage({
       roomId,
       receiverId: otherUser.id,
-      content: newMessage.trim(),
+      content: messageContent,
     });
 
     setNewMessage('');
@@ -164,15 +225,15 @@ export default function ChatRoomPage() {
   const otherUser = getOtherUser();
 
   return (
-    <div className="flex flex-col h-screen max-w-4xl mx-auto">
-      {/* 헤더 */}
-      <div className="bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            {/* 뒤로가기 버튼 - 인스타그램 스타일 */}
+    <div className="flex flex-col h-screen">
+      {/* 인스타그램 스타일 헤더 */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* 뒤로가기 버튼 */}
             <button
               onClick={() => router.push('/chats')}
-              className="text-gray-800 hover:text-gray-600 transition-colors"
+              className="text-gray-800 hover:text-gray-600 transition-colors p-2"
               title="뒤로"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,7 +241,7 @@ export default function ChatRoomPage() {
               </svg>
             </button>
 
-            {/* 사용자 정보 */}
+            {/* 사용자 정보 - 중앙 */}
             {otherUser && (
               <div
                 className="flex items-center space-x-3 cursor-pointer"
@@ -190,38 +251,38 @@ export default function ChatRoomPage() {
                   <img
                     src={getProfileImageUrl(otherUser.profileImage)}
                     alt={otherUser.username}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-8 h-8 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-gray-600 font-semibold">
+                  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                    <span className="text-gray-600 font-semibold text-sm">
                       {otherUser.username[0].toUpperCase()}
                     </span>
                   </div>
                 )}
                 <div>
-                  <h2 className="font-bold text-gray-900">{otherUser.username}</h2>
-                  {isTyping && <p className="text-sm text-gray-500">입력 중...</p>}
+                  <h2 className="font-semibold text-gray-900">{otherUser.username}</h2>
+                  {isTyping && <p className="text-xs text-gray-500">입력 중...</p>}
                 </div>
               </div>
             )}
-          </div>
 
-          {/* 홈 버튼 - 인스타그램 스타일 */}
-          <button
-            onClick={() => router.push('/')}
-            className="text-gray-800 hover:text-gray-600 transition-colors"
-            title="홈으로"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-          </button>
+            {/* 홈 버튼 */}
+            <button
+              onClick={() => router.push('/')}
+              className="text-gray-800 hover:text-gray-600 transition-colors p-2"
+              title="홈으로"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* 메시지 영역 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 max-w-4xl mx-auto w-full">
         {messages.map((message) => {
           const isMine = message.senderId === user?.id;
           const messageUser = isMine ? user : otherUser;
@@ -285,7 +346,8 @@ export default function ChatRoomPage() {
       </div>
 
       {/* 입력 영역 */}
-      <form onSubmit={handleSendMessage} className="bg-white border-t border-gray-200 p-4">
+      <form onSubmit={handleSendMessage} className="bg-white border-t border-gray-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex space-x-2">
           <input
             type="text"
@@ -304,6 +366,7 @@ export default function ChatRoomPage() {
           >
             전송
           </button>
+        </div>
         </div>
       </form>
     </div>

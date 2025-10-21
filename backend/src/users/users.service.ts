@@ -11,6 +11,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { RedisService } from '../redis/redis.service';
 
 /**
  * UsersService - 사용자 관리 서비스
@@ -21,6 +22,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly redisService: RedisService,
   ) {}
 
   /**
@@ -81,10 +83,24 @@ export class UsersService {
   }
 
   /**
-   * ID로 사용자 찾기 + 게시글 수 포함
+   * ID로 사용자 찾기 + 게시글 수 포함 + Redis 캐싱
    * - 프로필 조회 시 사용
+   * - Redis 캐시 키: user:profile:{userId}
+   * - TTL: 600초 (10분)
    */
   async findByIdWithPostCount(id: string) {
+    // Redis 캐시 키 생성
+    const cacheKey = `user:profile:${id}`;
+
+    // 캐시 확인
+    const cachedData = await this.redisService.get(cacheKey);
+    if (cachedData) {
+      console.log('✅ Cache HIT:', cacheKey);
+      return cachedData;
+    }
+
+    console.log('❌ Cache MISS:', cacheKey);
+
     const user = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.posts', 'post')
@@ -96,10 +112,16 @@ export class UsersService {
     }
 
     const { password, posts, ...userInfo } = user as any;
-    return {
+    const result = {
       ...userInfo,
       postCount: posts?.length || 0,
     };
+
+    // Redis에 캐시 저장 (TTL: 600초 = 10분)
+    await this.redisService.set(cacheKey, result, 600);
+    console.log('💾 Cached:', cacheKey);
+
+    return result;
   }
 
   /**
@@ -139,6 +161,7 @@ export class UsersService {
    * 프로필 업데이트
    * - username, email, bio 수정
    * - 중복 검증
+   * - 캐시 무효화
    */
   async updateProfile(userId: string, updateProfileDto: UpdateProfileDto) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -173,6 +196,11 @@ export class UsersService {
     // 업데이트
     Object.assign(user, updateProfileDto);
     const updatedUser = await this.userRepository.save(user);
+
+    // 프로필 캐시 무효화
+    const cacheKey = `user:profile:${userId}`;
+    await this.redisService.del(cacheKey);
+    console.log('🗑️  Invalidated cache:', cacheKey);
 
     // 비밀번호 제외하고 반환
     const { password, ...userWithoutPassword } = updatedUser;
@@ -226,6 +254,7 @@ export class UsersService {
   /**
    * 프로필 이미지 업데이트
    * - 프로필 이미지 URL 저장
+   * - 캐시 무효화
    */
   async updateProfileImage(userId: string, imageUrl: string) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -236,6 +265,11 @@ export class UsersService {
 
     user.profileImage = imageUrl;
     await this.userRepository.save(user);
+
+    // 프로필 캐시 무효화
+    const cacheKey = `user:profile:${userId}`;
+    await this.redisService.del(cacheKey);
+    console.log('🗑️  Invalidated cache:', cacheKey);
 
     return user;
   }

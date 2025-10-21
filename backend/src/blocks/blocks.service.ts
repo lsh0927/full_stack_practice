@@ -103,28 +103,32 @@ export class BlocksService {
 
   /**
    * 특정 사용자가 차단한 사용자 ID 목록 조회 (필터링용)
+   * - N+1 최적화: ID만 조회 (relations 없이)
    * @param blockerId - 차단한 사용자 ID
    */
   async getBlockedUserIds(blockerId: string): Promise<string[]> {
-    const blocks = await this.blockRepository.find({
-      where: { blocker: { id: blockerId } },
-      relations: ['blocked'],
-    });
+    const blocks = await this.blockRepository
+      .createQueryBuilder('block')
+      .select('block.blocked_id', 'blockedId')
+      .where('block.blocker_id = :blockerId', { blockerId })
+      .getRawMany();
 
-    return blocks.map((block) => block.blocked.id);
+    return blocks.map((block) => block.blockedId);
   }
 
   /**
    * 특정 사용자를 차단한 사용자 ID 목록 조회 (필터링용)
+   * - N+1 최적화: ID만 조회 (relations 없이)
    * @param userId - 차단당한 사용자 ID
    */
   async getBlockerUserIds(userId: string): Promise<string[]> {
-    const blocks = await this.blockRepository.find({
-      where: { blocked: { id: userId } },
-      relations: ['blocker'],
-    });
+    const blocks = await this.blockRepository
+      .createQueryBuilder('block')
+      .select('block.blocker_id', 'blockerId')
+      .where('block.blocked_id = :userId', { userId })
+      .getRawMany();
 
-    return blocks.map((block) => block.blocker.id);
+    return blocks.map((block) => block.blockerId);
   }
 
   /**

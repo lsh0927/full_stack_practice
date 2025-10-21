@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PostsModule } from './posts/posts.module';
@@ -36,6 +37,13 @@ import { QueueModule } from './queue/queue.module';
     }),
 
     /**
+     * ScheduleModule - Cron 작업 스케줄링
+     * @nestjs/schedule 사용하여 주기적인 배치 작업 실행
+     * 조회수 배치 업데이트 등에 사용
+     */
+    ScheduleModule.forRoot(),
+
+    /**
      * TypeOrmModule - PostgreSQL 연결 설정
      * Spring JPA의 application.yml 설정과 유사
      *
@@ -43,7 +51,13 @@ import { QueueModule } from './queue/queue.module';
      * - type: 'postgres' - PostgreSQL 사용
      * - synchronize: true (개발 환경) - 엔티티 변경 시 스키마 자동 동기화
      *   ⚠️ 프로덕션에서는 false로 설정하고 마이그레이션 사용
-     * - logging: true - SQL 쿼리 로깅 (N+1 문제 디버깅에 유용)
+     * - logging: ['error', 'warn', 'schema'] - 에러, 경고, 스키마 변경 로깅
+     * - maxQueryExecutionTime: 1000ms - 1초 이상 걸리는 느린 쿼리 경고
+     *
+     * 연결 풀 최적화:
+     * - extra.max: 20 - 최대 연결 수 (기본값 10에서 증가)
+     * - extra.min: 5 - 최소 연결 수
+     * - extra.idleTimeoutMillis: 30000 - 유휴 연결 타임아웃 (30초)
      */
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -56,7 +70,14 @@ import { QueueModule } from './queue/queue.module';
         database: configService.get<string>('DATABASE_NAME'),
         entities: [User, Post, Comment, Block, ChatRoom], // 엔티티 등록
         synchronize: true, // 개발 환경: true, 프로덕션: false
-        logging: true, // SQL 쿼리 로깅 활성화
+        logging: ['error', 'warn', 'schema'], // 에러, 경고, 스키마 변경만 로깅
+        maxQueryExecutionTime: 1000, // 1초 이상 걸리는 쿼리 경고
+        // 연결 풀 설정 (pg driver의 pool 옵션)
+        extra: {
+          max: 20, // 최대 연결 수
+          min: 5, // 최소 연결 수
+          idleTimeoutMillis: 30000, // 유휴 연결 타임아웃 (30초)
+        },
       }),
     }),
 

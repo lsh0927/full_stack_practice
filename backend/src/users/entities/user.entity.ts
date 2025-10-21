@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { Post } from '../../posts/entities/post.entity';
 
@@ -27,7 +28,9 @@ export class User {
    * 이메일 (로그인 ID)
    * - unique: true로 중복 방지
    * - DB 레벨에서 UNIQUE 제약조건 생성
+   * - 인덱스: 로그인 시 이메일 조회 성능 향상
    */
+  @Index()
   @Column({ unique: true })
   email: string;
 
@@ -43,7 +46,9 @@ export class User {
 
   /**
    * 사용자 이름 (닉네임)
+   * - 인덱스: 사용자 검색 및 프로필 조회 성능 향상
    */
+  @Index()
   @Column()
   username: string;
 

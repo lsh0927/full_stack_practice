@@ -165,97 +165,40 @@ export default function PostsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Board
-          </Link>
-
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="flex-1 max-w-md mx-8">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="검색..."
-                className="w-full px-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-300 transition-all"
-              />
-              {searchInput && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </form>
-
-          <div className="flex items-center gap-3">
-            {user ? (
-              <>
-                <Link
-                  href="/chats"
-                  className="px-4 py-2 text-gray-600 hover:text-purple-600 font-medium transition-colors"
-                >
-                  채팅
-                </Link>
-                <Link
-                  href={`/profile/${user.id}`}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  {user.profileImage ? (
-                    <img
-                      src={`${API_URL}${user.profileImage}`}
-                      alt={user.username}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                      {user.username[0].toUpperCase()}
-                    </div>
-                  )}
-                  <span className="text-sm font-medium text-gray-700">{user.username}</span>
-                </Link>
-                <button
-                  onClick={logout}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
-                >
-                  로그아웃
-                </button>
-                <Link
-                  href="/posts/new"
-                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
-                >
-                  작성
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/auth/login"
-                  className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-full font-semibold hover:bg-gray-50 transition-all"
-                >
-                  로그인
-                </Link>
-                <Link
-                  href="/auth/signup"
-                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all"
-                >
-                  회원가입
-                </Link>
-              </>
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Search Bar */}
+        <form onSubmit={handleSearch} className="mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="검색..."
+              className="w-full px-4 py-2 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             )}
           </div>
-        </div>
-      </header>
+        </form>
 
-      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* New Post Button */}
+        <div className="mb-6 flex justify-end">
+          <Link
+            href="/posts/new"
+            className="px-6 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-all"
+          >
+            작성
+          </Link>
+        </div>
         {/* Search Info */}
         {searchQuery && (
           <div className="mb-6 flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">

@@ -7,6 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -81,15 +82,18 @@ export class Post {
   /**
    * authorId: Foreign Key 컬럼
    * - User.id를 참조하는 외래키
-   * - 인덱스 자동 생성으로 조회 성능 향상
+   * - 인덱스: 특정 사용자의 게시글 조회 성능 향상
    */
+  @Index()
   @Column({ type: 'uuid' })
   authorId: string;
 
   /**
    * 생성 시각
    * - Mongoose의 timestamps: true와 동일
+   * - 인덱스: 시간순 정렬 및 최신 게시글 조회 성능 향상
    */
+  @Index()
   @CreateDateColumn()
   createdAt: Date;
 

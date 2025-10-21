@@ -49,6 +49,10 @@ export class PostsController {
    * 게시글 목록 조회
    * - JWT 인증 필수 (로그인한 사용자만 조회 가능)
    * - 차단한 사용자의 게시글 숨김 처리
+   *
+   * 페이지네이션:
+   * - cursor가 제공되면 커서 기반 페이지네이션 (무한 스크롤 최적화)
+   * - cursor가 없으면 기존 offset 기반 페이지네이션 (페이지 번호 기반)
    */
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -56,8 +60,14 @@ export class PostsController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
+    @Query('cursor') cursor?: string,
     @CurrentUser() user?: User,
   ) {
+    // 커서 기반 페이지네이션 우선
+    if (cursor) {
+      return this.postsService.findAllWithCursor(cursor, limit, search, user?.id);
+    }
+    // 기존 offset 기반 페이지네이션 (하위 호환성)
     return this.postsService.findAll(page, limit, search, user?.id);
   }
 
