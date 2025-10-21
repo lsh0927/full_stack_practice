@@ -7,13 +7,17 @@ import {
   Body,
   Param,
   UseGuards,
+  Inject,
 } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { CommentsService } from './comments.service';
+import { PostsService } from '../posts/posts.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { MESSAGE_PATTERNS } from '../queue/constants/queue.constants';
 
 /**
  * CommentsController - 댓글 관리 컨트롤러
@@ -21,12 +25,18 @@ import { User } from '../users/entities/user.entity';
 @Controller()
 @UseGuards(JwtAuthGuard)
 export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {}
+  constructor(
+    private readonly commentsService: CommentsService,
+    private readonly postsService: PostsService,
+    @Inject('NOTIFICATION_SERVICE')
+    private readonly notificationClient: ClientProxy,
+  ) {}
 
   /**
    * POST /posts/:postId/comments - 댓글 작성
    * - 게시글에 댓글 추가
    * - 대댓글 작성 가능 (parentId 제공 시)
+   * - 게시글 작성자에게 알림 전송 (비동기)
    */
   @Post('posts/:postId/comments')
   async create(
@@ -34,7 +44,29 @@ export class CommentsController {
     @Body() createCommentDto: CreateCommentDto,
     @CurrentUser() user: User,
   ) {
-    return this.commentsService.create(postId, createCommentDto, user.id);
+    // 댓글 생성
+    const comment = await this.commentsService.create(
+      postId,
+      createCommentDto,
+      user.id,
+    );
+
+    // 게시글 정보 조회 (작성자 정보 필요)
+    const post = await this.postsService.findOne(postId);
+
+    // 자기 게시글에 댓글 작성한 경우는 알림 안보냄
+    if (post.authorId !== user.id) {
+      // 🐰 댓글 알림을 RabbitMQ 큐에 전송 (비동기)
+      this.notificationClient.emit(MESSAGE_PATTERNS.NOTIFICATION_COMMENT, {
+        postAuthorId: post.authorId,
+        postId: post.id,
+        postTitle: post.title,
+        commenterUsername: user.username,
+        commentContent: createCommentDto.content,
+      });
+    }
+
+    return comment;
   }
 
   /**

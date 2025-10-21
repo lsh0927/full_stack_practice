@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 
 /* main() */
@@ -28,6 +29,54 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(3000);
+  // 🐰 RabbitMQ Microservice 연결 (Consumer 실행)
+  // HTTP 서버와 함께 RabbitMQ Consumer도 실행
+  const rabbitmqUrl =
+    process.env.RABBITMQ_URL ||
+    'amqp://rabbitmq_user:rabbitmq_password@localhost:5672';
+
+  // Email Queue
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rabbitmqUrl],
+      queue: 'email-queue',
+      queueOptions: { durable: true },
+      prefetchCount: 1,
+    },
+  });
+
+  // Notification Queue
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rabbitmqUrl],
+      queue: 'notification-queue',
+      queueOptions: { durable: true },
+      prefetchCount: 1,
+    },
+  });
+
+  // Image Queue
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rabbitmqUrl],
+      queue: 'image-queue',
+      queueOptions: { durable: true },
+      prefetchCount: 1,
+    },
+  });
+
+  // Microservice 시작
+  await app.startAllMicroservices();
+  console.log('🐰 RabbitMQ Consumers are running...');
+  console.log('   - EmailConsumer (email-queue)');
+  console.log('   - NotificationConsumer (notification-queue)');
+  console.log('   - ImageConsumer (image-queue)');
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`🚀 Application is running on: http://localhost:${port}`);
 }
 bootstrap();

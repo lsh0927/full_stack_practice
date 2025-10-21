@@ -9,13 +9,16 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ClientProxy } from '@nestjs/microservices';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
+import { MESSAGE_PATTERNS } from '../queue/constants/queue.constants';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -33,6 +36,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
+    @Inject('EMAIL_SERVICE') private readonly emailClient: ClientProxy,
   ) {}
 
   /**
@@ -75,6 +79,14 @@ export class AuthController {
     }
 
     const user = await this.usersService.create(createUserDto);
+
+    // 🐰 회원가입 환영 이메일을 RabbitMQ 큐에 전송 (비동기)
+    // 큐에 메시지만 넣고 즉시 반환 → 사용자는 이메일 발송을 기다리지 않음
+    this.emailClient.emit(MESSAGE_PATTERNS.EMAIL_WELCOME, {
+      to: user.email,
+      username: user.username,
+    });
+
     return this.authService.login(user);
   }
 

@@ -16,6 +16,7 @@ import { Comment } from './comments/entities/comment.entity';
 import { Block } from './blocks/entities/block.entity';
 import { ChatRoom } from './chats/entities/chat-room.entity';
 import { ChatsModule } from './chats/chats.module';
+import { QueueModule } from './queue/queue.module';
 
 /**
  * AppModule - 루트 모듈
@@ -71,6 +72,7 @@ import { ChatsModule } from './chats/chats.module';
     }),
 
     RedisModule,
+    QueueModule,
     UsersModule,
     AuthModule,
     PostsModule,

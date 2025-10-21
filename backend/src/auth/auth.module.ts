@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { KakaoAuthService } from './kakao-auth.service';
 import { KakaoAuthController } from './kakao-auth.controller';
 import { UsersModule } from '../users/users.module';
+import { QueueModule } from '../queue/queue.module';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
@@ -17,6 +18,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 @Module({
   imports: [
     UsersModule, // UsersService 사용
+    QueueModule, // RabbitMQ 큐 사용
     PassportModule, // Passport 기본 설정
     ConfigModule, // ConfigService 사용을 위해 추가
     /**
