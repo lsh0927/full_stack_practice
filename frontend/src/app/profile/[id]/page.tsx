@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { chatApi } from '@/lib/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -35,6 +36,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isBlocking, setIsBlocking] = useState(false);
+  const [isStartingChat, setIsStartingChat] = useState(false);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -67,6 +69,21 @@ export default function ProfilePage() {
       fetchProfile();
     }
   }, [id, token, router]);
+
+  const handleStartChat = async () => {
+    if (!id || typeof id !== 'string') return;
+
+    setIsStartingChat(true);
+
+    try {
+      const chatRoom = await chatApi.requestChat(id);
+      // 채팅방으로 이동
+      router.push(`/chats/${chatRoom.id}`);
+    } catch (err: any) {
+      alert(err.message || '채팅 시작에 실패했습니다');
+      setIsStartingChat(false);
+    }
+  };
 
   const handleBlockUser = async () => {
     if (!token || !id) return;
@@ -218,15 +235,24 @@ export default function ProfilePage() {
                 </Link>
               )}
 
-              {/* Block Button */}
+              {/* Chat and Block Buttons */}
               {!profile.isOwnProfile && (
-                <button
-                  onClick={handleBlockUser}
-                  disabled={isBlocking}
-                  className="mt-4 sm:mt-0 px-6 py-2 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isBlocking ? '차단 중...' : '사용자 차단'}
-                </button>
+                <div className="mt-4 sm:mt-0 flex gap-2">
+                  <button
+                    onClick={handleStartChat}
+                    disabled={isStartingChat}
+                    className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isStartingChat ? '채팅 시작 중...' : '채팅하기'}
+                  </button>
+                  <button
+                    onClick={handleBlockUser}
+                    disabled={isBlocking}
+                    className="px-6 py-2 bg-red-600 text-white rounded-full font-semibold hover:bg-red-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isBlocking ? '차단 중...' : '사용자 차단'}
+                  </button>
+                </div>
               )}
             </div>
 

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PostsModule } from './posts/posts.module';
@@ -13,6 +14,8 @@ import { User } from './users/entities/user.entity';
 import { Post } from './posts/entities/post.entity';
 import { Comment } from './comments/entities/comment.entity';
 import { Block } from './blocks/entities/block.entity';
+import { ChatRoom } from './chats/entities/chat-room.entity';
+import { ChatsModule } from './chats/chats.module';
 
 /**
  * AppModule - 루트 모듈
@@ -50,9 +53,20 @@ import { Block } from './blocks/entities/block.entity';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [User, Post, Comment, Block], // 엔티티 등록
+        entities: [User, Post, Comment, Block, ChatRoom], // 엔티티 등록
         synchronize: true, // 개발 환경: true, 프로덕션: false
         logging: true, // SQL 쿼리 로깅 활성화
+      }),
+    }),
+
+    /**
+     * MongooseModule - MongoDB 연결 설정 (채팅 메시지용)
+     * 채팅 메시지는 MongoDB에 저장하여 빠른 조회 성능 확보
+     */
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI'),
       }),
     }),
 
@@ -62,6 +76,7 @@ import { Block } from './blocks/entities/block.entity';
     PostsModule,
     CommentsModule,
     BlocksModule,
+    ChatsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
