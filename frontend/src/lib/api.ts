@@ -91,6 +91,16 @@ export const postsApi = {
     return authFetch(`/posts?${queryParams}`);
   },
 
+  // 팔로잉 사용자 피드 조회
+  getFollowingFeed: (params: { page?: number; limit?: number; search?: string }) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page.toString());
+    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.search) queryParams.append('search', params.search);
+
+    return authFetch(`/posts/following?${queryParams}`);
+  },
+
   // 게시글 상세 조회
   getPost: (id: string) => authFetch(`/posts/${id}`),
 
@@ -211,6 +221,55 @@ export const usersApi = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  // 사용자 검색
+  searchUsers: (query: string, page = 1, limit = 20) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('q', query);
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
+    return authFetch(`/users/search?${queryParams}`);
+  },
+};
+
+/**
+ * 팔로우 API
+ */
+export const followsApi = {
+  // 팔로우하기
+  follow: (userId: string) =>
+    authFetch(`/follows/${userId}`, {
+      method: 'POST',
+    }),
+
+  // 언팔로우하기
+  unfollow: (userId: string) =>
+    authFetch(`/follows/${userId}`, {
+      method: 'DELETE',
+    }),
+
+  // 팔로우 토글 (팔로우 상태면 언팔로우, 아니면 팔로우)
+  toggleFollow: (userId: string) =>
+    authFetch(`/follows/${userId}/toggle`, {
+      method: 'POST',
+    }),
+
+  // 팔로우 통계 조회 (팔로워 수, 팔로잉 수)
+  getFollowStats: (userId: string) => authFetch(`/follows/${userId}/stats`),
+
+  // 팔로우 여부 확인
+  isFollowing: (userId: string) => authFetch(`/follows/${userId}/is-following`),
+
+  // 맞팔로우 여부 확인
+  checkMutualFollow: (userId: string) => authFetch(`/follows/${userId}/mutual`),
+
+  // 팔로워 목록 조회
+  getFollowers: (userId: string, page = 1, limit = 20) =>
+    authFetch(`/follows/${userId}/followers?page=${page}&limit=${limit}`),
+
+  // 팔로잉 목록 조회
+  getFollowing: (userId: string, page = 1, limit = 20) =>
+    authFetch(`/follows/${userId}/following?page=${page}&limit=${limit}`),
 };
 
 /**

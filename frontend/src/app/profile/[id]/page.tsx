@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { chatApi, usersApi, API_URL } from '@/lib/api';
+import { chatApi, usersApi, followsApi, API_URL } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import BlockConfirmModal from '@/components/BlockConfirmModal';
+import FollowButton from '@/components/FollowButton';
 import ScrollAnimation from '@/components/ScrollAnimation';
 
 interface UserProfile {
@@ -17,6 +18,8 @@ interface UserProfile {
   bio?: string;
   createdAt: string;
   postCount: number;
+  followersCount?: number;
+  followingCount?: number;
   isOwnProfile: boolean;
   isBlocked: boolean;
 }
@@ -26,6 +29,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const { user, token, logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [followStats, setFollowStats] = useState<{ followersCount: number; followingCount: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isBlocking, setIsBlocking] = useState(false);
@@ -40,8 +44,12 @@ export default function ProfilePage() {
       }
 
       try {
-        const data = await usersApi.getUser(id as string);
-        setProfile(data);
+        const [userData, statsData] = await Promise.all([
+          usersApi.getUser(id as string),
+          followsApi.getFollowStats(id as string),
+        ]);
+        setProfile(userData);
+        setFollowStats(statsData);
         setLoading(false);
       } catch (err) {
         setError('프로필을 불러오는 중 오류가 발생했습니다');
@@ -53,6 +61,17 @@ export default function ProfilePage() {
       fetchProfile();
     }
   }, [id, token, router]);
+
+  // 팔로우 상태 변경 시 통계 다시 가져오기
+  const handleFollowChange = async (isFollowing: boolean) => {
+    if (!id) return;
+    try {
+      const statsData = await followsApi.getFollowStats(id as string);
+      setFollowStats(statsData);
+    } catch (err) {
+      console.error('팔로우 통계 조회 실패:', err);
+    }
+  };
 
   const handleStartChat = async () => {
     if (!id || typeof id !== 'string') return;
@@ -167,13 +186,13 @@ export default function ProfilePage() {
         {/* Profile Card */}
         <ScrollAnimation animation="scaleIn" delay={0.1}>
           <div className="rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-          {/* Cover */}
-          <div className="h-32 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500"></div>
+            {/* Cover */}
+            <div className="h-32 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500"></div>
 
-          {/* Profile Info */}
-          <div className="px-8 pb-8 bg-white dark:bg-gray-800 transition-colors duration-200">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-16 mb-6">
-              <div className="flex items-end gap-4">
+            {/* Profile Info */}
+            <div className="px-8 pb-8 bg-white dark:bg-gray-800 transition-colors duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-16 mb-6">
+                <div className="flex items-end gap-4">
                 {/* Profile Image */}
                 {profile.profileImage ? (
                   <img
@@ -212,9 +231,10 @@ export default function ProfilePage() {
                 </Link>
               )}
 
-              {/* Chat and Block Buttons */}
+              {/* Follow, Chat and Block Buttons */}
               {!profile.isOwnProfile && (
                 <div className="mt-4 sm:mt-0 flex gap-2">
+                  <FollowButton userId={profile.id} onFollowChange={handleFollowChange} />
                   <button
                     onClick={handleStartChat}
                     disabled={isStartingChat}
@@ -258,6 +278,18 @@ export default function ProfilePage() {
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">게시글</p>
               </div>
+              <Link href={`/profile/${profile.id}/followers`} className="hover:opacity-80 transition-opacity">
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400">
+                  {followStats?.followersCount ?? 0}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">팔로워</p>
+              </Link>
+              <Link href={`/profile/${profile.id}/following`} className="hover:opacity-80 transition-opacity">
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400">
+                  {followStats?.followingCount ?? 0}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">팔로잉</p>
+              </Link>
               <div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {formatDate(profile.createdAt)}
@@ -273,17 +305,17 @@ export default function ProfilePage() {
         <ScrollAnimation animation="slideUp" delay={0.3}>
           <div className="mt-8">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-            {profile.isOwnProfile ? '내 게시글' : `${profile.username}님의 게시글`}
-          </h2>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
-            <p>게시글 목록 기능은 추후 구현 예정입니다.</p>
-            <Link
-              href="/posts"
-              className="inline-block mt-4 text-purple-600 dark:text-purple-400 hover:underline"
-            >
-              전체 게시글 보기
-            </Link>
-          </div>
+              {profile.isOwnProfile ? '내 게시글' : `${profile.username}님의 게시글`}
+            </h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+              <p>게시글 목록 기능은 추후 구현 예정입니다.</p>
+              <Link
+                href="/posts"
+                className="inline-block mt-4 text-purple-600 dark:text-purple-400 hover:underline"
+              >
+                전체 게시글 보기
+              </Link>
+            </div>
           </div>
         </ScrollAnimation>
       </div>

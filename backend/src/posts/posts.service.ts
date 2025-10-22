@@ -6,6 +6,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { BlocksService } from '../blocks/blocks.service';
 import { RedisService } from '../redis/redis.service';
+import { FollowsService } from '../follows/follows.service';
 
 /**
  * PostsService - TypeORM 기반 게시글 관리 서비스
@@ -18,6 +19,7 @@ export class PostsService {
     private readonly postRepository: Repository<Post>,
     private readonly blocksService: BlocksService,
     private readonly redisService: RedisService,
+    private readonly followsService: FollowsService,
   ) {}
 
   /**
@@ -310,5 +312,72 @@ export class PostsService {
     // 게시글 목록 캐시 무효화
     await this.redisService.delByPattern('posts:list:*');
     console.log('🗑️  Invalidated cache: posts:list:*');
+  }
+
+  /**
+   * 팔로잉 사용자 게시글 피드 조회
+   * - 팔로우한 사용자의 게시글만 표시
+   * - 페이지네이션 지원
+   * - 차단 필터링 적용
+   */
+  async getFollowingFeed(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+  ) {
+    // 팔로잉 사용자 ID 목록 조회
+    const followingUserIds = await this.followsService.getFollowingUserIds(userId);
+
+    // 팔로우한 사용자가 없으면 빈 배열 반환
+    if (followingUserIds.length === 0) {
+      return {
+        posts: [],
+        total: 0,
+        page,
+        totalPages: 0,
+      };
+    }
+
+    const skip = (page - 1) * limit;
+
+    // QueryBuilder 사용
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .where('post.authorId IN (:...followingUserIds)', { followingUserIds })
+      .orderBy('post.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    // 차단 필터링
+    const blockedUserIds = await this.blocksService.getBlockedUserIds(userId);
+    const blockerUserIds = await this.blocksService.getBlockerUserIds(userId);
+    const excludedUserIds = [
+      ...new Set([...blockedUserIds, ...blockerUserIds]),
+    ];
+
+    if (excludedUserIds.length > 0) {
+      queryBuilder.andWhere('post.authorId NOT IN (:...excludedUserIds)', {
+        excludedUserIds,
+      });
+    }
+
+    // 검색 조건
+    if (search) {
+      queryBuilder.andWhere(
+        '(post.title ILIKE :search OR post.content ILIKE :search OR author.username ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    const [posts, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      posts,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }

@@ -5,6 +5,7 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
   NotFoundException,
@@ -12,6 +13,8 @@ import {
   UseInterceptors,
   UploadedFile,
   Inject,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -35,6 +38,24 @@ export class UsersController {
     private readonly blocksService: BlocksService,
     @Inject('IMAGE_SERVICE') private readonly imageClient: ClientProxy,
   ) {}
+
+  /**
+   * GET /users/search?q=query - 사용자 검색
+   * - username 또는 email로 검색
+   * - 페이지네이션 지원
+   */
+  @Get('search')
+  @UseGuards(JwtAuthGuard)
+  async searchUsers(
+    @Query('q') query: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    if (!query) {
+      throw new BadRequestException('검색어를 입력해주세요.');
+    }
+    return this.usersService.searchUsers(query, page, limit);
+  }
 
   /**
    * GET /users/:id - 특정 사용자 프로필 조회

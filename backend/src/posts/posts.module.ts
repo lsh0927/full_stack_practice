@@ -6,6 +6,7 @@ import { PostsViewsScheduler } from './posts-views.scheduler';
 import { Post } from './entities/post.entity';
 import { BlocksModule } from '../blocks/blocks.module';
 import { RedisModule } from '../redis/redis.module';
+import { FollowsModule } from '../follows/follows.module';
 
 /**
  * PostsModule - 게시글 모듈
@@ -16,6 +17,7 @@ import { RedisModule } from '../redis/redis.module';
     TypeOrmModule.forFeature([Post]), // TypeORM Repository 등록
     BlocksModule, // 차단 기능 사용
     RedisModule, // Redis 캐싱 및 조회수 임시 저장
+    FollowsModule, // 팔로우 기능 사용
   ],
   controllers: [PostsController],
   providers: [PostsService, PostsViewsScheduler],

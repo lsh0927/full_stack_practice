@@ -96,6 +96,20 @@ export class User {
   posts: Post[];
 
   /**
+   * 팔로워 수 캐싱 필드
+   * 성능 최적화를 위해 별도 필드로 관리
+   */
+  @Column({ default: 0 })
+  followersCount: number;
+
+  /**
+   * 팔로잉 수 캐싱 필드
+   * 성능 최적화를 위해 별도 필드로 관리
+   */
+  @Column({ default: 0 })
+  followingCount: number;
+
+  /**
    * CreateDateColumn: 생성 시각 자동 기록
    * JPA의 @CreatedDate와 동일
    */

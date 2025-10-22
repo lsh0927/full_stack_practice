@@ -28,6 +28,7 @@ export default function PostsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [feedMode, setFeedMode] = useState<'all' | 'following'>('following');
 
   // 로그인 체크
   useEffect(() => {
@@ -54,12 +55,18 @@ export default function PostsPage() {
       setError('');
 
       try {
-        console.log('Fetching posts with token:', token);
-        const data: PostsResponse = await postsApi.getPosts({
-          page: currentPage,
-          limit: 10,
-          search: searchQuery || undefined,
-        });
+        console.log(`Fetching ${feedMode} posts with token:`, token);
+        const data: PostsResponse = feedMode === 'following'
+          ? await postsApi.getFollowingFeed({
+              page: currentPage,
+              limit: 10,
+              search: searchQuery || undefined,
+            })
+          : await postsApi.getPosts({
+              page: currentPage,
+              limit: 10,
+              search: searchQuery || undefined,
+            });
 
         setPosts(data.posts);
         setTotalPages(data.totalPages);
@@ -73,7 +80,7 @@ export default function PostsPage() {
     }
 
     fetchPosts();
-  }, [currentPage, searchQuery, token]);
+  }, [currentPage, searchQuery, token, feedMode]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +133,38 @@ export default function PostsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Feed Mode Toggle */}
+        <ScrollAnimation animation="fadeIn" delay={0.05}>
+          <div className="mb-4 flex gap-2 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm border border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => {
+                setFeedMode('following');
+                setCurrentPage(1);
+              }}
+              className={`flex-1 px-4 py-2 rounded-full font-semibold transition-all ${
+                feedMode === 'following'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white shadow-md'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              팔로잉 피드
+            </button>
+            <button
+              onClick={() => {
+                setFeedMode('all');
+                setCurrentPage(1);
+              }}
+              className={`flex-1 px-4 py-2 rounded-full font-semibold transition-all ${
+                feedMode === 'all'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white shadow-md'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              전체 게시글
+            </button>
+          </div>
+        </ScrollAnimation>
+
         {/* Search Bar */}
         <ScrollAnimation animation="fadeIn" delay={0.1}>
           <form onSubmit={handleSearch} className="mb-6">

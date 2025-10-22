@@ -338,4 +338,45 @@ export class UsersService {
     const { password, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword as User;
   }
+
+  /**
+   * 사용자 검색
+   * - username 또는 email로 검색 (부분 일치)
+   * - 페이지네이션 지원
+   */
+  async searchUsers(
+    query: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{
+    data: User[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.username LIKE :query', { query: `%${query}%` })
+      .orWhere('user.email LIKE :query', { query: `%${query}%` })
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    // 비밀번호 제외
+    const usersWithoutPassword = users.map((user) => {
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword as User;
+    });
+
+    return {
+      data: usersWithoutPassword,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 }

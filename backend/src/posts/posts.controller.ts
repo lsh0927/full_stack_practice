@@ -46,6 +46,22 @@ export class PostsController {
   }
 
   /**
+   * 팔로잉 사용자 피드 조회
+   * - 팔로우한 사용자의 게시글만 표시
+   * - JWT 인증 필수
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('following')
+  getFollowingFeed(
+    @CurrentUser() user: User,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+    @Query('search') search?: string,
+  ) {
+    return this.postsService.getFollowingFeed(user.id, page, limit, search);
+  }
+
+  /**
    * 게시글 목록 조회
    * - JWT 인증 필수 (로그인한 사용자만 조회 가능)
    * - 차단한 사용자의 게시글 숨김 처리
