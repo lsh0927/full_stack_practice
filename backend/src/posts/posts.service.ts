@@ -380,4 +380,52 @@ export class PostsService {
       totalPages: Math.ceil(total / limit),
     };
   }
+
+  /**
+   * 특정 사용자의 게시글 목록 조회
+   * - 페이지네이션 지원
+   * - 차단 필터링 적용 (선택적)
+   */
+  async getUserPosts(
+    userId: string,
+    page: number = 1,
+    limit: number = 10,
+    currentUserId?: string,
+  ) {
+    const skip = (page - 1) * limit;
+
+    // QueryBuilder 사용
+    const queryBuilder = this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.author', 'author')
+      .where('post.authorId = :userId', { userId })
+      .orderBy('post.createdAt', 'DESC')
+      .skip(skip)
+      .take(limit);
+
+    // 차단 필터링 (현재 사용자가 있고, 본인이 아닌 경우)
+    if (currentUserId && currentUserId !== userId) {
+      const isBlocked = await this.blocksService.isBlocked(currentUserId, userId);
+      const isBlockedBy = await this.blocksService.isBlocked(userId, currentUserId);
+
+      // 차단 관계가 있으면 빈 결과 반환
+      if (isBlocked || isBlockedBy) {
+        return {
+          posts: [],
+          total: 0,
+          page,
+          totalPages: 0,
+        };
+      }
+    }
+
+    const [posts, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      posts,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 }

@@ -230,6 +230,18 @@ export const usersApi = {
     queryParams.append('limit', limit.toString());
     return authFetch(`/users/search?${queryParams}`);
   },
+
+  // 사용자 팔로워 목록 조회
+  getUserFollowers: (userId: string, page = 1, limit = 20) =>
+    authFetch(`/users/${userId}/followers?page=${page}&limit=${limit}`),
+
+  // 사용자 팔로잉 목록 조회
+  getUserFollowing: (userId: string, page = 1, limit = 20) =>
+    authFetch(`/users/${userId}/following?page=${page}&limit=${limit}`),
+
+  // 사용자 게시글 목록 조회
+  getUserPosts: (userId: string, page = 1, limit = 10) =>
+    authFetch(`/users/${userId}/posts?page=${page}&limit=${limit}`),
 };
 
 /**

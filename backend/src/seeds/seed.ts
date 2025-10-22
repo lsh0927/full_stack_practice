@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { Follow } from '../follows/entities/follow.entity';
+import { Story } from '../stories/entities/story.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { RedisService } from '../redis/redis.service';
@@ -21,6 +22,9 @@ async function bootstrap() {
   const postRepository = app.get<Repository<Post>>(getRepositoryToken(Post));
   const followRepository = app.get<Repository<Follow>>(
     getRepositoryToken(Follow),
+  );
+  const storyRepository = app.get<Repository<Story>>(
+    getRepositoryToken(Story),
   );
   const redisService = app.get<RedisService>(RedisService);
 
@@ -177,11 +181,45 @@ async function bootstrap() {
       console.log(`  ✅ ${user.username}: 팔로워 ${followersCount}명, 팔로잉 ${followingCount}명`);
     }
 
+    // 스토리 생성 (일부 유저만, 임의로 5명 선택)
+    console.log('\n📸 스토리 생성 중...');
+    const storyCount = Math.min(5, users.length);
+    let createdStories = 0;
+
+    for (let i = 0; i < storyCount; i++) {
+      const user = users[i];
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24); // 24시간 후 만료
+
+      // 각 유저당 1-2개의 스토리 생성
+      const numStories = Math.floor(Math.random() * 2) + 1;
+
+      for (let j = 0; j < numStories; j++) {
+        try {
+          const story = storyRepository.create({
+            authorId: user.id,
+            mediaUrl: `https://picsum.photos/seed/${user.id}-story-${j}/1080/1920`,
+            mediaType: 'image',
+            thumbnailUrl: `https://picsum.photos/seed/${user.id}-story-${j}/400/400`,
+            expiresAt,
+            viewsCount: 0,
+          });
+
+          await storyRepository.save(story);
+          createdStories++;
+          console.log(`  ✅ ${user.username}의 스토리 생성 (${j + 1}/${numStories})`);
+        } catch (error) {
+          console.error(`  ❌ ${user.username}의 스토리 생성 실패:`, error.message);
+        }
+      }
+    }
+
     console.log('\n✨ 시드 데이터 생성 완료!');
     console.log(`📊 생성된 데이터:`);
     console.log(`   - 유저: ${users.length}명`);
     console.log(`   - 게시물: ${users.length * 5}개`);
     console.log(`   - 팔로우 관계: ${followRelations.size}개`);
+    console.log(`   - 스토리: ${createdStories}개`);
 
     // Redis 캐시 무효화
     console.log('\n🗑️  Redis 캐시 무효화 중...');

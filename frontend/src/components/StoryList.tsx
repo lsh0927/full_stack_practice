@@ -40,12 +40,16 @@ export default function StoryList() {
       setLoading(true);
       const data = await storiesApi.getFollowingStories();
 
+      // 디버깅: 팔로잉 스토리 데이터 확인
+      console.log('[StoryList] Following stories data:', data);
+
       // 작성자별로 그룹화 (백엔드에서 이미 그룹화되어 올 수도 있음)
       const grouped: { [key: string]: GroupedStories } = {};
 
       // 현재 사용자 스토리 추가
       if (user) {
         const userStories = await storiesApi.getUserStories(user.id);
+
         if (userStories && userStories.length > 0) {
           grouped[user.id] = {
             authorId: user.id,
@@ -62,26 +66,28 @@ export default function StoryList() {
       }
 
       // 팔로잉 스토리 추가
-      if (data && Array.isArray(data)) {
-        data.forEach((story: Story) => {
-          const authorId = story.authorId;
+      // 백엔드는 { [authorId: string]: Story[] } 형태로 반환
+      if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([authorId, stories]) => {
+          const storiesArray = stories as Story[];
 
-          if (!grouped[authorId]) {
-            grouped[authorId] = {
-              authorId,
-              author: story.author,
-              stories: [],
-              hasViewed: true,
-              isCurrentUser: authorId === user?.id,
-            };
+          if (storiesArray.length === 0) return;
+
+          // 첫 번째 스토리에서 작성자 정보 가져오기
+          const firstStory = storiesArray[0];
+
+          // 본인 스토리는 이미 추가했으므로 스킵
+          if (authorId === user?.id) {
+            return;
           }
 
-          grouped[authorId].stories.push(story);
-
-          // 하나라도 안 본 스토리가 있으면 hasViewed = false
-          if (!story.isViewed) {
-            grouped[authorId].hasViewed = false;
-          }
+          grouped[authorId] = {
+            authorId,
+            author: firstStory.author,
+            stories: storiesArray,
+            hasViewed: storiesArray.every((story) => story.isViewed),
+            isCurrentUser: false,
+          };
         });
       }
 
@@ -94,6 +100,9 @@ export default function StoryList() {
         if (a.hasViewed && !b.hasViewed) return 1;
         return 0;
       });
+
+      console.log('[StoryList] Grouped stories:', groupedArray);
+      console.log('[StoryList] Total authors with stories:', groupedArray.length);
 
       setGroupedStories(groupedArray);
     } catch (error) {
@@ -157,40 +166,61 @@ export default function StoryList() {
     );
   };
 
-  const handleNextAuthor = () => {
+  const handleNextAuthor = (keyboardOnly = false) => {
     if (selectedAuthorIndex === null) return;
-    const nextIndex = selectedAuthorIndex + 1;
-    if (nextIndex < groupedStories.length) {
-      setSelectedAuthorIndex(nextIndex);
+
+    if (keyboardOnly) {
+      // 키보드로 이동 시: 다음 안 본 스토리로 이동
+      const nextUnviewedIndex = visibleStories.findIndex(
+        (group, idx) => idx > selectedAuthorIndex && !group.hasViewed
+      );
+
+      if (nextUnviewedIndex !== -1) {
+        setSelectedAuthorIndex(nextUnviewedIndex);
+      } else {
+        handleCloseViewer();
+      }
     } else {
-      handleCloseViewer();
+      // 자동 진행(5초 후) 또는 클릭: 모든 스토리로 이동 가능
+      const nextIndex = selectedAuthorIndex + 1;
+      if (nextIndex < visibleStories.length) {
+        setSelectedAuthorIndex(nextIndex);
+      } else {
+        handleCloseViewer();
+      }
     }
   };
 
-  const handlePrevAuthor = () => {
+  const handlePrevAuthor = (keyboardOnly = false) => {
     if (selectedAuthorIndex === null) return;
-    const prevIndex = selectedAuthorIndex - 1;
-    if (prevIndex >= 0) {
-      setSelectedAuthorIndex(prevIndex);
+
+    if (keyboardOnly) {
+      // 키보드로 이동 시: 이전 안 본 스토리로 이동
+      // 역순으로 찾기
+      const prevUnviewedIndex = visibleStories
+        .slice(0, selectedAuthorIndex)
+        .reverse()
+        .findIndex((group) => !group.hasViewed);
+
+      if (prevUnviewedIndex !== -1) {
+        const actualIndex = selectedAuthorIndex - 1 - prevUnviewedIndex;
+        setSelectedAuthorIndex(actualIndex);
+      }
+    } else {
+      // 자동 진행 또는 클릭: 모든 스토리로 이동 가능
+      const prevIndex = selectedAuthorIndex - 1;
+      if (prevIndex >= 0) {
+        setSelectedAuthorIndex(prevIndex);
+      }
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center space-x-4 px-4 py-4 overflow-hidden">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="flex flex-col items-center space-y-1 animate-pulse">
-            <div className="w-16 h-16 bg-gray-300 dark:bg-gray-700 rounded-full" />
-            <div className="w-12 h-3 bg-gray-300 dark:bg-gray-700 rounded" />
-          </div>
-        ))}
-      </div>
-    );
-  }
+  // 모든 스토리 표시 (본 것도 포함, 테두리 색상으로 구분)
+  const visibleStories = groupedStories;
 
-  // 조회한 스토리는 현재 사용자가 아니면 화면에서 숨김
-  const visibleStories = groupedStories.filter(
-    (group) => group.isCurrentUser || !group.hasViewed
+  console.log('[StoryList] Visible stories after filtering:', visibleStories);
+  console.log('[StoryList] Hidden stories (already viewed):',
+    groupedStories.filter(group => !group.isCurrentUser && group.hasViewed)
   );
 
   // 현재 사용자 스토리와 나머지 스토리 분리
@@ -207,6 +237,20 @@ export default function StoryList() {
     // 스토리 목록 새로고침
     fetchStories();
   };
+
+  // 로딩 중일 때
+  if (loading) {
+    return (
+      <div className="flex items-center space-x-4 px-4 py-4 overflow-hidden">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="flex flex-col items-center space-y-1 animate-pulse">
+            <div className="w-16 h-16 bg-gray-300 dark:bg-gray-700 rounded-full" />
+            <div className="w-12 h-3 bg-gray-300 dark:bg-gray-700 rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -231,7 +275,7 @@ export default function StoryList() {
               hasStories={myStory ? myStory.stories.length > 0 : false}
               onClick={() => {
                 if (myStory) {
-                  handleStoryClick(groupedStories.indexOf(myStory));
+                  handleStoryClick(visibleStories.indexOf(myStory));
                 }
               }}
               onAddStory={handleAddStory}
@@ -253,23 +297,23 @@ export default function StoryList() {
               hasViewed={group.hasViewed}
               isCurrentUser={group.isCurrentUser}
               hasStories={group.stories.length > 0}
-              onClick={() => handleStoryClick(groupedStories.indexOf(group))}
+              onClick={() => handleStoryClick(visibleStories.indexOf(group))}
             />
           ))}
         </div>
       </motion.div>
 
       {/* 스토리 뷰어 */}
-      {selectedAuthorIndex !== null && (
+      {selectedAuthorIndex !== null && visibleStories[selectedAuthorIndex] && (
         <StoryViewer
-          stories={groupedStories[selectedAuthorIndex].stories}
-          author={groupedStories[selectedAuthorIndex].author}
+          stories={visibleStories[selectedAuthorIndex].stories}
+          author={visibleStories[selectedAuthorIndex].author}
           onClose={handleCloseViewer}
           onNext={handleNextAuthor}
           onPrev={handlePrevAuthor}
           onStoryViewed={handleStoryViewed}
           hasPrev={selectedAuthorIndex > 0}
-          hasNext={selectedAuthorIndex < groupedStories.length - 1}
+          hasNext={selectedAuthorIndex < visibleStories.length - 1}
         />
       )}
 

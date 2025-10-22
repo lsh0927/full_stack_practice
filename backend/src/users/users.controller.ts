@@ -22,6 +22,8 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { UsersService } from './users.service';
 import { BlocksService } from '../blocks/blocks.service';
+import { FollowsService } from '../follows/follows.service';
+import { PostsService } from '../posts/posts.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -36,6 +38,8 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly blocksService: BlocksService,
+    private readonly followsService: FollowsService,
+    private readonly postsService: PostsService,
     @Inject('IMAGE_SERVICE') private readonly imageClient: ClientProxy,
   ) {}
 
@@ -55,6 +59,69 @@ export class UsersController {
       throw new BadRequestException('검색어를 입력해주세요.');
     }
     return this.usersService.searchUsers(query, page, limit);
+  }
+
+  /**
+   * GET /users/:id/followers - 특정 사용자의 팔로워 목록 조회
+   * - 페이지네이션 지원
+   * - JWT 인증 필수
+   */
+  @Get(':id/followers')
+  @UseGuards(JwtAuthGuard)
+  async getUserFollowers(
+    @Param('id') id: string,
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    const user = await this.usersService.findById(id);
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    return this.followsService.getFollowers(id, req.user.id, page, limit);
+  }
+
+  /**
+   * GET /users/:id/following - 특정 사용자의 팔로잉 목록 조회
+   * - 페이지네이션 지원
+   * - JWT 인증 필수
+   */
+  @Get(':id/following')
+  @UseGuards(JwtAuthGuard)
+  async getUserFollowing(
+    @Param('id') id: string,
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    const user = await this.usersService.findById(id);
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    return this.followsService.getFollowing(id, req.user.id, page, limit);
+  }
+
+  /**
+   * GET /users/:id/posts - 특정 사용자의 게시글 목록 조회
+   * - 페이지네이션 지원
+   * - JWT 인증 필수
+   */
+  @Get(':id/posts')
+  @UseGuards(JwtAuthGuard)
+  async getUserPosts(
+    @Param('id') id: string,
+    @Request() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    const user = await this.usersService.findById(id);
+    if (!user) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    return this.postsService.getUserPosts(id, page, limit, req.user.id);
   }
 
   /**

@@ -15,8 +15,8 @@ interface StoryViewerProps {
     profileImage: string | null;
   };
   onClose: () => void;
-  onNext: () => void;
-  onPrev: () => void;
+  onNext: (keyboardOnly?: boolean) => void;
+  onPrev: (keyboardOnly?: boolean) => void;
   onStoryViewed?: (storyId: string) => void;
   hasNext: boolean;
   hasPrev: boolean;
@@ -57,12 +57,15 @@ export default function StoryViewer({
   };
 
   // 다음 스토리로 이동
-  const goToNext = useCallback(() => {
+  const goToNext = useCallback((keyboardOnly = false) => {
     if (currentIndex < stories.length - 1) {
       setCurrentIndex((prev) => prev + 1);
       setProgress(0);
     } else if (hasNext) {
-      onNext();
+      // React 렌더링 사이클 문제 방지를 위해 다음 틴에서 실행
+      setTimeout(() => {
+        onNext(keyboardOnly);
+      }, 0);
     } else {
       // React 렌더링 사이클 문제 방지를 위해 다음 틴에서 실행
       setTimeout(() => {
@@ -72,12 +75,15 @@ export default function StoryViewer({
   }, [currentIndex, stories.length, hasNext, onNext, onClose]);
 
   // 이전 스토리로 이동
-  const goToPrev = useCallback(() => {
+  const goToPrev = useCallback((keyboardOnly = false) => {
     if (currentIndex > 0) {
       setCurrentIndex((prev) => prev - 1);
       setProgress(0);
     } else if (hasPrev) {
-      onPrev();
+      // React 렌더링 사이클 문제 방지를 위해 다음 틴에서 실행
+      setTimeout(() => {
+        onPrev(keyboardOnly);
+      }, 0);
     }
   }, [currentIndex, hasPrev, onPrev]);
 
@@ -85,9 +91,9 @@ export default function StoryViewer({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
-        goToPrev();
+        goToPrev(true); // 키보드로는 안 본 스토리로만 이동
       } else if (e.key === 'ArrowRight') {
-        goToNext();
+        goToNext(true); // 키보드로는 안 본 스토리로만 이동
       } else if (e.key === 'Escape') {
         onClose();
       }
@@ -104,7 +110,7 @@ export default function StoryViewer({
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
-          goToNext();
+          goToNext(false); // 자동 진행: 모든 스토리 순차 이동
           return 0;
         }
         return prev + (100 / (STORY_DURATION / 100));
@@ -128,6 +134,11 @@ export default function StoryViewer({
       document.body.style.overflow = 'unset';
     };
   }, []);
+
+  // 스토리가 없거나 currentStory가 undefined인 경우 처리
+  if (!stories || stories.length === 0 || !currentStory) {
+    return null;
+  }
 
   return (
     <motion.div
@@ -232,7 +243,7 @@ export default function StoryViewer({
         {/* 좌측 네비게이션 영역 */}
         <div
           className="absolute left-0 top-0 bottom-0 w-1/3 cursor-pointer"
-          onClick={goToPrev}
+          onClick={() => goToPrev(false)}
         >
           {(hasPrev || currentIndex > 0) && (
             <div className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity">
@@ -244,7 +255,7 @@ export default function StoryViewer({
         {/* 우측 네비게이션 영역 */}
         <div
           className="absolute right-0 top-0 bottom-0 w-1/3 cursor-pointer"
-          onClick={goToNext}
+          onClick={() => goToNext(false)}
         >
           {(hasNext || currentIndex < stories.length - 1) && (
             <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 hover:opacity-100 transition-opacity">

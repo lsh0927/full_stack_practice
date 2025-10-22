@@ -18,7 +18,7 @@ interface FollowUser {
 }
 
 interface FollowingResponse {
-  items: FollowUser[];
+  data: FollowUser[];
   total: number;
   page: number;
   totalPages: number;
@@ -48,7 +48,7 @@ export default function FollowingPage() {
           followsApi.getFollowing(id as string, currentPage, 20),
           usersApi.getUser(id as string),
         ]);
-        setFollowing(followingData.items);
+        setFollowing(followingData.data);
         setTotal(followingData.total);
         setTotalPages(followingData.totalPages);
         setProfileUser(userData);

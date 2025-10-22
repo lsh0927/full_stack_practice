@@ -4,31 +4,36 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { followsApi, usersApi } from '@/lib/api';
-import FollowButton from '@/components/FollowButton';
+import { usersApi } from '@/lib/api';
 import ScrollAnimation from '@/components/ScrollAnimation';
-import ProfileImage from '@/components/ProfileImage';
+import { formatDate } from '@/lib/utils';
 
-interface FollowUser {
+interface Post {
   id: string;
-  username: string;
-  email: string;
-  profileImage?: string;
-  bio?: string;
+  title: string;
+  content: string;
+  author: {
+    id: string;
+    username: string;
+    profileImage?: string;
+  };
+  createdAt: string;
+  views?: number;
+  likesCount?: number;
 }
 
-interface FollowersResponse {
-  data: FollowUser[];
+interface PostsResponse {
+  posts: Post[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-export default function FollowersPage() {
+export default function UserPostsPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, token } = useAuth();
-  const [followers, setFollowers] = useState<FollowUser[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [profileUser, setProfileUser] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -44,17 +49,17 @@ export default function FollowersPage() {
 
     async function fetchData() {
       try {
-        const [followersData, userData] = await Promise.all([
-          followsApi.getFollowers(id as string, currentPage, 20),
+        const [postsData, userData] = await Promise.all([
+          usersApi.getUserPosts(id as string, currentPage, 10),
           usersApi.getUser(id as string),
         ]);
-        setFollowers(followersData.data);
-        setTotal(followersData.total);
-        setTotalPages(followersData.totalPages);
+        setPosts(postsData.posts);
+        setTotal(postsData.total);
+        setTotalPages(postsData.totalPages);
         setProfileUser(userData);
         setLoading(false);
       } catch (err) {
-        setError('팔로워 목록을 불러오는 중 오류가 발생했습니다');
+        setError('게시글 목록을 불러오는 중 오류가 발생했습니다');
         setLoading(false);
       }
     }
@@ -109,54 +114,60 @@ export default function FollowersPage() {
               프로필로 돌아가기
             </Link>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-              {profileUser?.username}님의 팔로워
+              {profileUser?.username}님의 게시글
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">전체 {total}명</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">전체 {total}개</p>
           </div>
         </ScrollAnimation>
 
-        {/* Followers List */}
-        {followers.length === 0 ? (
+        {/* Posts List */}
+        {posts.length === 0 ? (
           <ScrollAnimation animation="fadeIn" delay={0.2}>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-12 text-center border border-gray-200 dark:border-gray-700">
               <svg className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <p className="text-gray-500 dark:text-gray-400">팔로워가 없습니다</p>
+              <p className="text-gray-500 dark:text-gray-400">작성한 게시글이 없습니다</p>
             </div>
           </ScrollAnimation>
         ) : (
           <div className="space-y-4">
-            {followers.map((follower, index) => (
-              <ScrollAnimation key={follower.id} animation="slideUp" delay={0.05 * index}>
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 p-6">
-                  <div className="flex items-center justify-between">
-                    <Link
-                      href={`/profile/${follower.id}`}
-                      className="flex items-center gap-4 hover:opacity-80 transition-opacity flex-1"
-                    >
-                      <ProfileImage
-                        profileImage={follower.profileImage}
-                        username={follower.username}
-                        size="lg"
-                      />
+            {posts.map((post, index) => (
+              <ScrollAnimation key={post.id} animation="slideUp" delay={0.05 * index}>
+                <Link href={`/posts/${post.id}`}>
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-700 p-6 hover:border-purple-400 dark:hover:border-purple-600">
+                    <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400">
-                          {follower.username}
+                        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400 mb-2">
+                          {post.title}
                         </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{follower.email}</p>
-                        {follower.bio && (
-                          <p className="mt-2 text-gray-600 dark:text-gray-300 line-clamp-2">
-                            {follower.bio}
-                          </p>
-                        )}
+                        <p className="text-gray-600 dark:text-gray-300 line-clamp-2 mb-4">
+                          {post.content}
+                        </p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                          <span>{formatDate(post.createdAt)}</span>
+                          {post.views !== undefined && (
+                            <span className="flex items-center gap-1">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              {post.views}
+                            </span>
+                          )}
+                          {post.likesCount !== undefined && (
+                            <span className="flex items-center gap-1">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                              </svg>
+                              {post.likesCount}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </Link>
-                    {user?.id !== follower.id && (
-                      <FollowButton userId={follower.id} />
-                    )}
+                    </div>
                   </div>
-                </div>
+                </Link>
               </ScrollAnimation>
             ))}
           </div>

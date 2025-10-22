@@ -363,10 +363,12 @@ export class StoriesService {
     } catch (error) {
       // Race condition으로 인한 중복 키 에러는 무시
       // (거의 동시에 두 개의 요청이 들어온 경우)
-      if (error.code === '23505') {
+      if (error?.code === '23505' || error?.constraint?.includes('UQ_')) {
         // PostgreSQL unique violation error code
+        console.log('Story already viewed, skipping duplicate view');
         return;
       }
+      console.error('Error marking story as viewed:', error);
       throw error;
     }
   }

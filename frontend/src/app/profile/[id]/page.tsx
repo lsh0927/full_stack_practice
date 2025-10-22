@@ -272,12 +272,12 @@ export default function ProfilePage() {
 
             {/* Stats */}
             <div className="flex gap-8 py-4 border-y border-gray-200 dark:border-gray-700">
-              <div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <Link href={`/profile/${profile.id}/posts`} className="hover:opacity-80 transition-opacity">
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400">
                   {profile.postCount}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">게시글</p>
-              </div>
+              </Link>
               <Link href={`/profile/${profile.id}/followers`} className="hover:opacity-80 transition-opacity">
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400">
                   {followStats?.followersCount ?? 0}
