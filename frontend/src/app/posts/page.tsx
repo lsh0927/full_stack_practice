@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types/post';
 import { useAuth } from '@/contexts/AuthContext';
-import { postsApi, API_URL } from '@/lib/api';
+import { postsApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import ScrollAnimation from '@/components/ScrollAnimation';
+import ProfileImage from '@/components/ProfileImage';
 
 interface PostsResponse {
   posts: Post[];
@@ -208,24 +209,11 @@ export default function PostsPage() {
                       onClick={(e) => e.stopPropagation()}
                       className="flex items-center hover:opacity-80 transition-opacity"
                     >
-                      {post.author?.profileImage ? (
-                        <img
-                          src={`${API_URL}${post.author.profileImage}`}
-                          alt={post.author.username}
-                          className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div
-                        className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 rounded-full flex items-center justify-center text-white font-bold ring-2 ring-gray-100 dark:ring-gray-700"
-                        style={{ display: post.author?.profileImage ? 'none' : 'flex' }}
-                      >
-                        {post.author?.username?.[0]?.toUpperCase() || '?'}
-                      </div>
+                      <ProfileImage
+                        profileImage={post.author?.profileImage}
+                        username={post.author?.username}
+                        size="md"
+                      />
                       <div className="ml-3">
                         <p className="font-semibold text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400">
                           {post.author?.username || '알 수 없음'}
@@ -252,6 +240,12 @@ export default function PostsPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                         <span>{post.views}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        <span>{post.likesCount || 0}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

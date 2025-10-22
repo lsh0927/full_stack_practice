@@ -50,6 +50,15 @@ export class Post {
   views: number;
 
   /**
+   * 좋아요 개수
+   * - default: 0
+   * - 성능 최적화를 위한 캐싱 필드
+   * - Like 엔티티와 동기화하여 관리
+   */
+  @Column({ default: 0, unsigned: true })
+  likesCount: number;
+
+  /**
    * Post와 User의 N:1 관계
    * - ManyToOne: 여러 Post가 한 명의 User에 속함
    * - JoinColumn: Foreign Key 컬럼 이름 지정

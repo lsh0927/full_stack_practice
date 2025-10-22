@@ -22,8 +22,21 @@ export const authFetch = async (url: string, options: RequestInit = {}) => {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `HTTP error! status: ${response.status}`);
+    let errorMessage = `HTTP error! status: ${response.status}`;
+
+    try {
+      const error = await response.json();
+      errorMessage = error.message || error.error || errorMessage;
+    } catch (e) {
+      // JSON 파싱 실패 시 기본 에러 메시지 사용
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  // DELETE 요청의 경우 No Content(204) 응답 처리
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return null;
   }
 
   return response.json();
@@ -106,6 +119,35 @@ export const postsApi = {
     authFetch(`/posts/${id}/views`, {
       method: 'POST',
     }),
+};
+
+/**
+ * 좋아요 API
+ */
+export const likesApi = {
+  // 좋아요 추가
+  likePost: (postId: string) =>
+    authFetch(`/posts/${postId}/like`, {
+      method: 'POST',
+    }),
+
+  // 좋아요 취소
+  unlikePost: (postId: string) =>
+    authFetch(`/posts/${postId}/like`, {
+      method: 'DELETE',
+    }),
+
+  // 좋아요 개수 조회
+  getLikesCount: (postId: string) =>
+    authFetch(`/posts/${postId}/likes/count`),
+
+  // 좋아요 상태 확인
+  getLikeStatus: (postId: string) =>
+    authFetch(`/posts/${postId}/like/status`),
+
+  // 좋아요 목록 조회
+  getLikes: (postId: string, page = 1, limit = 20) =>
+    authFetch(`/posts/${postId}/likes?page=${page}&limit=${limit}`),
 };
 
 /**

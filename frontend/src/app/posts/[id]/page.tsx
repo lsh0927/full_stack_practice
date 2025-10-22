@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Post } from '@/types/post';
 import { useAuth } from '@/contexts/AuthContext';
-import { postsApi, blocksApi, API_URL } from '@/lib/api';
+import { postsApi, blocksApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import CommentSection from '@/components/CommentSection';
+import LikeButton from '@/components/LikeButton';
+import ProfileImage from '@/components/ProfileImage';
 
 export default function PostDetailPage({
   params,
@@ -132,39 +134,18 @@ export default function PostDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-            Board
-          </Link>
-          <Link
-            href="/posts"
-            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-500 dark:to-pink-500 text-white rounded-full font-semibold hover:shadow-lg transition-all"
-          >
-            목록
-          </Link>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 pt-16">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Post Card */}
         <article className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
           {/* Post Header */}
           <div className="p-6 border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center mb-4">
-              {post.author?.profileImage ? (
-                <img
-                  src={`${API_URL}${post.author.profileImage}`}
-                  alt={post.author.username}
-                  className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100 dark:ring-gray-700"
-                />
-              ) : (
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg ring-2 ring-gray-100 dark:ring-gray-700">
-                  {post.author?.username?.[0]?.toUpperCase() || '?'}
-                </div>
-              )}
+              <ProfileImage
+                profileImage={post.author?.profileImage}
+                username={post.author?.username}
+                size="lg"
+              />
               <div className="ml-3 flex-1">
                 <p className="font-semibold text-gray-900 dark:text-gray-100">{post.author?.username || '알 수 없음'}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(post.createdAt)}</p>
@@ -188,6 +169,11 @@ export default function PostDetailPage({
             <div className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap text-lg">
               {post.content}
             </div>
+          </div>
+
+          {/* Like Button Section */}
+          <div className="px-6 pb-4">
+            <LikeButton postId={post.id} initialLikesCount={post.likesCount || 0} />
           </div>
 
           {/* Post Footer */}

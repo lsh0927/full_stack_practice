@@ -16,7 +16,9 @@ import { Post } from './posts/entities/post.entity';
 import { Comment } from './comments/entities/comment.entity';
 import { Block } from './blocks/entities/block.entity';
 import { ChatRoom } from './chats/entities/chat-room.entity';
+import { Like } from './likes/entities/like.entity';
 import { ChatsModule } from './chats/chats.module';
+import { LikesModule } from './likes/likes.module';
 import { QueueModule } from './queue/queue.module';
 
 /**
@@ -68,7 +70,7 @@ import { QueueModule } from './queue/queue.module';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [User, Post, Comment, Block, ChatRoom], // 엔티티 등록
+        entities: [User, Post, Comment, Block, ChatRoom, Like], // 엔티티 등록
         synchronize: true, // 개발 환경: true, 프로덕션: false
         logging: ['error', 'warn', 'schema'], // 에러, 경고, 스키마 변경만 로깅
         maxQueryExecutionTime: 1000, // 1초 이상 걸리는 쿼리 경고
@@ -100,6 +102,7 @@ import { QueueModule } from './queue/queue.module';
     CommentsModule,
     BlocksModule,
     ChatsModule,
+    LikesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

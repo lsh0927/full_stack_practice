@@ -12,6 +12,7 @@ export interface Post {
   author: User; // TypeORM은 author 객체 반환
   authorId: string;
   views: number;
+  likesCount?: number; // 좋아요 개수
   createdAt: string;
   updatedAt: string;
 }

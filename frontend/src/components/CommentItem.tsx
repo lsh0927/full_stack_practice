@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { Comment } from '@/types/comment';
 import { useAuth } from '@/contexts/AuthContext';
-import { commentsApi, API_URL } from '@/lib/api';
+import { commentsApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import CommentForm from './CommentForm';
+import ProfileImage from './ProfileImage';
 
 interface CommentItemProps {
   comment: Comment;
@@ -72,28 +73,23 @@ export default function CommentItem({
     <div className={`${isReply ? 'ml-12' : ''}`}>
       <div className="p-6">
         <div className="flex items-start gap-3">
-          {comment.author?.profileImage ? (
-            <img
-              src={`${API_URL}${comment.author.profileImage}`}
-              alt={comment.author.username}
-              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-            />
-          ) : (
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-              {comment.author?.username?.[0]?.toUpperCase() || '?'}
-            </div>
-          )}
+          <ProfileImage
+            profileImage={comment.author?.profileImage}
+            username={comment.author?.username}
+            size="md"
+            className="flex-shrink-0"
+          />
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
                 {comment.author?.username || '알 수 없음'}
               </span>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
                 {formatDate(comment.createdAt)}
               </span>
               {comment.createdAt !== comment.updatedAt && (
-                <span className="text-xs text-gray-400">(수정됨)</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">(수정됨)</span>
               )}
             </div>
 
