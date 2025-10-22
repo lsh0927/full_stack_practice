@@ -1065,9 +1065,43 @@ erDiagram
 
 특히 **보안, 테스트, 모니터링** 측면을 강화하고, **CI/CD 파이프라인**을 구축하여 **지속적인 배포와 개선**이 가능한 시스템으로 발전시키는 것이 우선 목표입니다.
 
+
+
+  🔍 부하테스트 실패 원인 종합 분석
+
+  1번 문제: 백엔드 UUID Validation 부족
+
+  - 현상: 잘못된 UUID 형식 요청 시 500 에러 발생
+  - 원인: fake-uuid-12345 같은 잘못된 UUID로 요청하면 TypeORM이
+  쿼리 실행 전 에러 발생
+  - 해결책: 컨트롤러에 UUID validation 파이프 추가 필요
+
+  2번 문제: RabbitMQ 연결 불안정
+
+  - 현상: 5초마다 "unknown delivery tag 1" 에러로 채널 재연결
+  - 원인: 메시지 acknowledgment 처리 오류
+  - 영향: 부하테스트 중 간헐적 연결 끊김 가능
+
+  3번 문제: Grafana HTTP 메트릭 부재
+
+  - 백엔드가 HTTP 메트릭을 Prometheus로 export하지 않음
+  - Grafana에서 요청 성공/실패율을 볼 수 없음
+
+  해결 방안:
+
+  즉시 조치:
+  1. UUID validation 파이프 추가
+  2. 부하테스트 스크립트에서 빈 UUID 필터링 강화
+
+  어떤 부분부터 수정하시겠습니까?
+
+> 하나씩 수정하자. 1번부터 해결하려면 어떻게 해야해? 애초에 
+잘못된 UUID로 요청하는 경우가 있기는 해? 
+
 ---
 
 **작성자**: Seungheon Lee
 **프로젝트**: 크래프톤 정글 10기 Board 프로젝트
 **기술 스택**: Next.js 15, React 19, NestJS 11, PostgreSQL 16, MongoDB 7, Redis 7, RabbitMQ 3
 **작성일**: 2025년 1월
+

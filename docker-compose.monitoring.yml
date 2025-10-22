@@ -1,0 +1,192 @@
+version: '3.8'
+
+services:
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: board-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - board-network
+    restart: unless-stopped
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: board-grafana
+    ports:
+      - "3003:3000"  # 3003으로 변경 (3001은 frontend가 사용)
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    networks:
+      - board-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - loki
+
+  # Loki
+  loki:
+    image: grafana/loki:latest
+    container_name: board-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/loki-config.yml
+    networks:
+      - board-network
+    restart: unless-stopped
+
+  # Promtail
+  promtail:
+    image: grafana/promtail:latest
+    container_name: board-promtail
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./backend/logs:/app/backend/logs:ro
+    command: -config.file=/etc/promtail/promtail-config.yml
+    networks:
+      - board-network
+    restart: unless-stopped
+    depends_on:
+      - loki
+
+  # Node Exporter
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: board-node-exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - board-network
+    restart: unless-stopped
+
+  # cAdvisor
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: board-cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - board-network
+    restart: unless-stopped
+
+  # PostgreSQL Exporter
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    container_name: board-postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://board_user:board_password@postgres:5432/board_db?sslmode=disable"
+    ports:
+      - "9187:9187"
+    networks:
+      - board-network
+    restart: unless-stopped
+
+  # MongoDB Exporter
+  mongodb-exporter:
+    image: percona/mongodb_exporter:0.40
+    container_name: board-mongodb-exporter
+    command:
+      - "--mongodb.uri=mongodb://mongo_user:mongo_password@mongodb:27017/admin"
+      - "--collect-all"
+    ports:
+      - "9216:9216"
+    networks:
+      - board-network
+    restart: unless-stopped
+
+  # Redis Exporter
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: board-redis-exporter
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+      REDIS_PASSWORD: "redis_password"
+    ports:
+      - "9121:9121"
+    networks:
+      - board-network
+    restart: unless-stopped
+
+  # Alertmanager
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: board-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - board-network
+    restart: unless-stopped
+
+  # Scouter Server (선택적 - APM이 필요한 경우)
+  # scouter-server:
+  #   build: ./monitoring/scouter
+  #   container_name: board-scouter-server
+  #   ports:
+  #     - "6100:6100"  # TCP
+  #     - "6180:6180"  # HTTP
+  #   volumes:
+  #     - scouter_data:/scouter/database
+  #   networks:
+  #     - board-network
+  #   restart: unless-stopped
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
+  alertmanager_data:
+    driver: local
+  # scouter_data:
+  #   driver: local
+
+networks:
+  board-network:
+    name: board-project_board-network
+    external: true
