@@ -141,6 +141,22 @@ export default function StoryList() {
     fetchStories();
   };
 
+  // 스토리 조회 시 로컬 state 업데이트
+  const handleStoryViewed = (storyId: string) => {
+    setGroupedStories((prev) =>
+      prev.map((group) => {
+        const updatedStories = group.stories.map((story) =>
+          story.id === storyId ? { ...story, isViewed: true } : story
+        );
+        return {
+          ...group,
+          stories: updatedStories,
+          hasViewed: updatedStories.every((s) => s.isViewed),
+        };
+      })
+    );
+  };
+
   const handleNextAuthor = () => {
     if (selectedAuthorIndex === null) return;
     const nextIndex = selectedAuthorIndex + 1;
@@ -251,6 +267,7 @@ export default function StoryList() {
           onClose={handleCloseViewer}
           onNext={handleNextAuthor}
           onPrev={handlePrevAuthor}
+          onStoryViewed={handleStoryViewed}
           hasPrev={selectedAuthorIndex > 0}
           hasNext={selectedAuthorIndex < groupedStories.length - 1}
         />

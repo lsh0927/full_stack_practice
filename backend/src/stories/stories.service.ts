@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan, LessThan, In } from 'typeorm';
-import * as sharp from 'sharp';
+import sharp from 'sharp';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Story } from './entities/story.entity';
@@ -52,7 +52,18 @@ export class StoriesService {
     });
 
     const savedStory = await this.storyRepository.save(story);
-    return this.toResponseDto(savedStory, false);
+
+    // author 관계를 포함하여 다시 조회
+    const storyWithAuthor = await this.storyRepository.findOne({
+      where: { id: savedStory.id },
+      relations: ['author'],
+    });
+
+    if (!storyWithAuthor) {
+      throw new InternalServerErrorException('Failed to retrieve created story');
+    }
+
+    return this.toResponseDto(storyWithAuthor, false);
   }
 
   /**
@@ -102,7 +113,18 @@ export class StoriesService {
       });
 
       const savedStory = await this.storyRepository.save(story);
-      return this.toResponseDto(savedStory, false);
+
+      // author 관계를 포함하여 다시 조회
+      const storyWithAuthor = await this.storyRepository.findOne({
+        where: { id: savedStory.id },
+        relations: ['author'],
+      });
+
+      if (!storyWithAuthor) {
+        throw new InternalServerErrorException('Failed to retrieve created story');
+      }
+
+      return this.toResponseDto(storyWithAuthor, false);
     } catch (error) {
       // 에러 발생 시 업로드된 파일 정리
       console.error('Story creation failed, cleaning up files:', error);
@@ -327,16 +349,26 @@ export class StoriesService {
       throw new NotFoundException(`Story with ID ${storyId} has expired`);
     }
 
-    // 읽음 기록 생성
-    const storyView = this.storyViewRepository.create({
-      storyId,
-      viewerId,
-    });
+    try {
+      // 읽음 기록 생성
+      const storyView = this.storyViewRepository.create({
+        storyId,
+        viewerId,
+      });
 
-    await this.storyViewRepository.save(storyView);
+      await this.storyViewRepository.save(storyView);
 
-    // 조회수 증가
-    await this.storyRepository.increment({ id: storyId }, 'viewsCount', 1);
+      // 조회수 증가
+      await this.storyRepository.increment({ id: storyId }, 'viewsCount', 1);
+    } catch (error) {
+      // Race condition으로 인한 중복 키 에러는 무시
+      // (거의 동시에 두 개의 요청이 들어온 경우)
+      if (error.code === '23505') {
+        // PostgreSQL unique violation error code
+        return;
+      }
+      throw error;
+    }
   }
 
   /**

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Story } from '@/types/story';
-import { storiesApi } from '@/lib/api';
+import { storiesApi, API_URL } from '@/lib/api';
 import Avatar from './ui/Avatar';
 import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
@@ -17,6 +17,7 @@ interface StoryViewerProps {
   onClose: () => void;
   onNext: () => void;
   onPrev: () => void;
+  onStoryViewed?: (storyId: string) => void;
   hasNext: boolean;
   hasPrev: boolean;
 }
@@ -31,6 +32,7 @@ export default function StoryViewer({
   onClose,
   onNext,
   onPrev,
+  onStoryViewed,
   hasNext,
   hasPrev,
 }: StoryViewerProps) {
@@ -45,6 +47,10 @@ export default function StoryViewer({
   const markAsViewed = async (storyId: string) => {
     try {
       await storiesApi.markStoryAsViewed(storyId);
+      // 부모 컴포넌트에게 조회 완료 알림
+      if (onStoryViewed) {
+        onStoryViewed(storyId);
+      }
     } catch (error) {
       console.error('Failed to mark story as viewed:', error);
     }
@@ -58,7 +64,10 @@ export default function StoryViewer({
     } else if (hasNext) {
       onNext();
     } else {
-      onClose();
+      // React 렌더링 사이클 문제 방지를 위해 다음 틴에서 실행
+      setTimeout(() => {
+        onClose();
+      }, 0);
     }
   }, [currentIndex, stories.length, hasNext, onNext, onClose]);
 
@@ -202,14 +211,14 @@ export default function StoryViewer({
           >
             {currentStory.mediaType === 'image' ? (
               <img
-                src={currentStory.mediaUrl}
+                src={`${API_URL}${currentStory.mediaUrl}`}
                 alt="Story"
                 className="max-w-full max-h-full object-contain select-none"
                 draggable={false}
               />
             ) : (
               <video
-                src={currentStory.mediaUrl}
+                src={`${API_URL}${currentStory.mediaUrl}`}
                 className="max-w-full max-h-full object-contain"
                 autoPlay
                 loop
