@@ -9,6 +9,7 @@ import { postsApi } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import ScrollAnimation from '@/components/ScrollAnimation';
 import ProfileImage from '@/components/ProfileImage';
+import StoryList from '@/components/StoryList';
 
 interface PostsResponse {
   posts: Post[];
@@ -133,6 +134,13 @@ export default function PostsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Story Section */}
+        <ScrollAnimation animation="fadeIn" delay={0}>
+          <div className="mb-6 bg-gray-50 dark:bg-gray-900 rounded-2xl overflow-hidden">
+            <StoryList />
+          </div>
+        </ScrollAnimation>
+
         {/* Feed Mode Toggle */}
         <ScrollAnimation animation="fadeIn" delay={0.05}>
           <div className="mb-4 flex gap-2 bg-white dark:bg-gray-800 rounded-full p-1 shadow-sm border border-gray-200 dark:border-gray-700">

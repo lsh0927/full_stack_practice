@@ -295,3 +295,100 @@ export const chatApi = {
   // 채팅방별 읽지 않은 메시지 수 조회
   getUnreadCountByRoom: () => authFetch('/chats/unread-count-by-room'),
 };
+
+/**
+ * 스토리 API
+ */
+export const storiesApi = {
+  // 스토리 생성 (multipart/form-data)
+  createStory: async (
+    file: File,
+    mediaType: 'image' | 'video',
+    thumbnailFile?: File,
+    onProgress?: (progress: number) => void
+  ) => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const formData = new FormData();
+
+    formData.append('file', file);
+    formData.append('mediaType', mediaType);
+    if (thumbnailFile) {
+      formData.append('thumbnail', thumbnailFile);
+    }
+
+    // XMLHttpRequest를 사용하여 진행률 추적
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      // 진행률 이벤트 핸들러
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable && onProgress) {
+          const progress = Math.round((e.loaded / e.total) * 100);
+          onProgress(progress);
+        }
+      });
+
+      // 완료 이벤트 핸들러
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response);
+          } catch (e) {
+            reject(new Error('응답 파싱 실패'));
+          }
+        } else {
+          let errorMessage = `HTTP error! status: ${xhr.status}`;
+          try {
+            const error = JSON.parse(xhr.responseText);
+            errorMessage = error.message || error.error || errorMessage;
+          } catch (e) {
+            // JSON 파싱 실패 시 기본 에러 메시지 사용
+          }
+          reject(new Error(errorMessage));
+        }
+      });
+
+      // 에러 이벤트 핸들러
+      xhr.addEventListener('error', () => {
+        reject(new Error('네트워크 오류가 발생했습니다.'));
+      });
+
+      // 타임아웃 이벤트 핸들러
+      xhr.addEventListener('timeout', () => {
+        reject(new Error('업로드 시간이 초과되었습니다.'));
+      });
+
+      // 요청 설정
+      xhr.open('POST', `${API_URL}/stories`);
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+      xhr.timeout = 60000; // 60초 타임아웃
+
+      // 요청 전송
+      xhr.send(formData);
+    });
+  },
+
+  // 팔로우한 사용자들의 스토리 조회 (작성자별 그룹화)
+  getFollowingStories: () => authFetch('/stories/following'),
+
+  // 특정 사용자의 스토리 목록 조회
+  getUserStories: (authorId: string) => authFetch(`/stories/user/${authorId}`),
+
+  // 스토리 단일 조회
+  getStory: (id: string) => authFetch(`/stories/${id}`),
+
+  // 스토리 삭제
+  deleteStory: (id: string) =>
+    authFetch(`/stories/${id}`, {
+      method: 'DELETE',
+    }),
+
+  // 스토리 읽음 처리
+  markStoryAsViewed: (id: string) =>
+    authFetch(`/stories/${id}/view`, {
+      method: 'POST',
+    }),
+};

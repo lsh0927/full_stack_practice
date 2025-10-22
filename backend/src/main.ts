@@ -14,6 +14,10 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useGlobalPipes(new ValidationPipe());
 
+  // Body 크기 제한 설정 (base64 이미지 업로드를 위해 50MB로 설정)
+  app.use(require('body-parser').json({ limit: '50mb' }));
+  app.use(require('body-parser').urlencoded({ limit: '50mb', extended: true }));
+
   // 정적 파일 제공 설정 - 업로드된 이미지 파일 제공
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
